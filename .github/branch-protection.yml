@@ -1,0 +1,101 @@
+# GitHub Branch Protection Rules
+# 바이브코딩 전용 브랜치 보호 설정
+
+protection_rules:
+  # 🚨 Production Branch - 최고 보안 레벨
+  main:
+    required_status_checks:
+      strict: true
+      contexts:
+        - "🔍 Code Quality"
+        - "🧪 Tests"
+        - "🏗️ Build"
+        - "🐳 Docker Build"
+        - "✅ CI Success"
+    
+    required_pull_request_reviews:
+      required_approving_review_count: 2
+      dismiss_stale_reviews: true
+      require_code_owner_reviews: true
+      require_last_push_approval: true
+    
+    restrictions:
+      users: []
+      teams: ["maintainers"]
+    
+    enforce_admins: true
+    allow_force_pushes: false
+    allow_deletions: false
+    block_creations: false
+
+  # 🔄 Integration Branch - 바이브코딩 통합점
+  develop:
+    required_status_checks:
+      strict: true
+      contexts:
+        - "🔍 Code Quality"
+        - "🧪 Tests"
+        - "🏗️ Build"
+    
+    required_pull_request_reviews:
+      required_approving_review_count: 1
+      dismiss_stale_reviews: true
+      require_code_owner_reviews: false
+      require_last_push_approval: false
+    
+    restrictions: null
+    enforce_admins: false
+    allow_force_pushes: false
+    allow_deletions: false
+    
+  # 🎯 Feature Branches - 바이브코딩 작업 브랜치
+  "feature/*":
+    required_status_checks:
+      strict: false
+      contexts:
+        - "🔍 Code Quality"
+        - "🧪 Tests"
+    
+    required_pull_request_reviews:
+      required_approving_review_count: 0
+      dismiss_stale_reviews: false
+    
+    restrictions: null
+    enforce_admins: false
+    allow_force_pushes: true
+    allow_deletions: true
+
+# 자동 머지 설정
+auto_merge:
+  develop:
+    # develop → main으로 자동 머지 조건
+    conditions:
+      - all_checks_pass: true
+      - no_conflicts: true
+      - up_to_date: true
+    schedule: "0 */2 * * *"  # 2시간마다 체크
+
+# 브랜치 명명 규칙
+branch_naming:
+  patterns:
+    - "feature/cursor-*"     # 커서 전용 기능 브랜치
+    - "feature/claude-*"     # 클로드 전용 기능 브랜치  
+    - "feature/collab-*"     # 협업 기능 브랜치
+    - "hotfix/*"            # 긴급 수정
+    - "release/*"           # 릴리즈 준비
+  
+  forbidden:
+    - "master"              # main 사용 강제
+    - "dev"                 # develop 사용 강제
+
+# 바이브코딩 워크플로우 규칙
+vibecoding_rules:
+  session_duration: "30-90분"
+  sync_interval: "30분"
+  merge_strategy: "squash"
+  
+  branch_lifecycle:
+    create: "세션 시작 시"
+    sync: "30분마다 develop로"
+    merge: "기능 완료 시"
+    delete: "머지 후 자동 삭제"

@@ -11,7 +11,12 @@
     "allow": [
       "Read(D:\\Documents\\routine-quest-app/**)",
       "Read(D:\\Documents\\routine-quest-app\\docs/**)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

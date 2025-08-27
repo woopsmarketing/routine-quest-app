@@ -1,0 +1,247 @@
+# 🤖 Cursor AI 바이브코딩 자동화 규칙
+
+## 프로젝트 개요
+**Routine Quest App** - "다음 1스텝"만 보여주는 순서 기반 퀘스트형 루틴 앱
+
+### 기술 스택
+- **Frontend**: Flutter (iOS/Android/Web) - Clean Architecture
+- **Backend**: FastAPI + PostgreSQL + SQLAlchemy  
+- **AI Service**: FastAPI + LangChain (OpenAI/Anthropic)
+- **Infrastructure**: Docker + Turborepo + PNPM 모노레포
+
+---
+
+## ⚡ 트리거 명령어 자동화
+
+### **"업로드해줘"** 트리거
+사용자가 "업로드해줘"라고 하면 자동으로 다음 명령어 실행:
+
+```bash
+# 1. 현재 변경사항 확인
+git status
+
+# 2. 모든 변경사항 추가
+git add .
+
+# 3. Cursor 작업 완료 커밋
+git commit -m "feat: cursor 작업 완료 - $(date '+%Y-%m-%d %H:%M')
+
+💻 Cursor AI 작업 내역:
+- [주요 변경사항을 여기에 자동 요약]
+- UI/UX 구현 완료
+- 기능 테스트 통과"
+
+# 4. feature/cursor-setup 브랜치에 푸시
+git push origin feature/cursor-setup
+```
+
+### **"작업 완료"** 트리거
+사용자가 "작업 완료"라고 하면 위 업로드 + PR 생성:
+
+```bash
+# 업로드 명령어 실행 후 PR 생성
+gh pr create \
+  --title "💻 Cursor 기능 구현 완료: [기능명]" \
+  --body "💻 Cursor AI 기능 구현 완료
+
+## 🎯 구현된 기능
+- [기능 목록 자동 생성]
+- 프론트엔드 UI/UX 완성
+- 백엔드 API 연동
+- 테스트 케이스 작성
+
+## 🧪 테스트 결과  
+- [ ] UI/UX 테스트 통과
+- [ ] API 연동 테스트 통과
+- [ ] 단위 테스트 통과
+- [ ] 통합 테스트 통과
+
+## 🎵 다음 단계
+1. Claude Code로 코드 리뷰 및 개선
+2. develop 브랜치 통합 테스트
+3. main 브랜치 배포 준비
+
+---
+💡 **Cursor → Claude 인계점**: 기본 기능 구현 완료, 코드 품질 개선 필요" \
+  --base develop \
+  --head feature/cursor-setup \
+  --assignee @me
+```
+
+---
+
+## 🏗️ Cursor AI 역할 및 담당 영역
+
+### **Phase 1: 대량 구현 (Cursor AI 강점)**
+- ✅ **UI/UX 컴포넌트** 대량 생성
+- ✅ **CRUD 기능** 반복 구현  
+- ✅ **API 엔드포인트** 표준 패턴 적용
+- ✅ **테스트 코드** 자동 생성
+- ✅ **스타일링** 및 반응형 디자인
+- ✅ **데이터베이스** 마이그레이션 및 모델
+
+### **Phase 2: 빠른 프로토타이핑**
+- ⚡ **MVP 기능** 빠른 구현
+- ⚡ **더미 데이터** 및 Mock API
+- ⚡ **기본 라우팅** 및 네비게이션  
+- ⚡ **폼 처리** 및 유효성 검증
+
+### **인계 기준**
+다음 상황에서는 Claude Code로 인계 권장:
+- 🧠 **복잡한 아키텍처** 설계 필요
+- 🧠 **성능 최적화** 및 리팩토링
+- 🧠 **보안 검토** 및 취약점 분석
+- 🧠 **데이터 분석** 및 알고리즘 최적화
+
+---
+
+## 📂 프로젝트 구조 이해
+
+```
+routine-quest-app/
+├── client/           # Flutter 앱 (Cursor가 주로 담당)
+│   ├── lib/
+│   │   ├── features/ # Clean Architecture 기반
+│   │   ├── core/     # 공통 기능
+│   │   └── shared/   # 공유 컴포넌트
+├── api/              # FastAPI 백엔드 (Cursor가 주로 담당)
+│   ├── app/
+│   │   ├── models/   # SQLAlchemy 모델
+│   │   ├── api/      # API 엔드포인트
+│   │   └── services/ # 비즈니스 로직
+├── ai/               # AI 마이크로서비스 (Claude 협력)
+└── shared/           # TypeScript 공용 타입 (Cursor 담당)
+```
+
+---
+
+## 🎯 브랜치 전략
+
+### **브랜치 구조**
+```
+main (🚨 production)
+├── develop (🔄 integration) 
+├── feature/cursor-setup (💻 Cursor 전용)
+├── feature/claude-setup (🧠 Claude 전용)  
+├── feature/collab-* (🤝 협업용)
+└── hotfix/* (⚡ 긴급 수정)
+```
+
+### **작업 흐름**
+1. **Cursor**: `feature/cursor-setup`에서 기능 구현
+2. **업로드**: "업로드해줘" → 자동 커밋/푸시
+3. **완료**: "작업 완료" → develop로 PR 생성
+4. **인계**: Claude Code가 코드 리뷰 및 개선
+5. **통합**: develop → main 최종 배포
+
+---
+
+## 🚀 개발 환경 설정
+
+### **빠른 시작**
+```bash
+# 전체 환경 설정
+./scripts/setup.sh
+
+# 개발 서버 실행 (모든 서비스)
+pnpm dev
+
+# 특정 서비스만 실행
+pnpm dev --filter=@routine-quest/client   # Flutter 웹
+pnpm dev --filter=@routine-quest/api      # 백엔드 API
+```
+
+### **주요 명령어**
+```bash
+# 빌드 및 테스트
+pnpm build                 # 전체 빌드
+pnpm test                  # 전체 테스트  
+pnpm lint                  # 코드 품질 검사
+
+# Flutter 관련
+cd client && flutter pub get              # 의존성 설치
+cd client && flutter test                 # Flutter 테스트
+cd client && flutter build web            # 웹 빌드
+
+# 백엔드 관련  
+cd api && pip install -r requirements.txt # 의존성 설치
+cd api && pytest                          # 백엔드 테스트
+cd api && uvicorn app.main:app --reload   # 개발 서버
+```
+
+---
+
+## 💡 코딩 가이드라인
+
+### **코드 품질**
+- ✅ **린터 규칙** 준수 (ESLint, Pylint, Flutter Lint)
+- ✅ **타입 안전성** 보장 (TypeScript, Dart, Python Type Hints)
+- ✅ **테스트 작성** 필수 (단위/통합/위젯 테스트)
+- ✅ **주석 및 문서화** (함수/클래스 DocString)
+
+### **성능 고려사항**
+- ⚡ **번들 크기** 최적화 (Flutter Web, API 응답)
+- ⚡ **데이터베이스** 쿼리 최적화 (N+1 문제 방지)
+- ⚡ **캐싱 전략** 적용 (Redis, Flutter 로컬 캐시)
+- ⚡ **비동기 처리** 활용 (Future/async-await)
+
+### **보안 기본수칙**
+- 🔒 **API 키** 환경변수로 관리
+- 🔒 **사용자 입력** 검증 및 살균  
+- 🔒 **인증/권한** 체크 (JWT, Firebase Auth)
+- 🔒 **HTTPS** 강제 및 CORS 설정
+
+---
+
+## 🎵 바이브코딩 세션 플로우
+
+### **1. 세션 시작**
+```bash
+# 자동으로 새 브랜치 생성 및 전환
+git checkout -b feature/cursor-[기능명]
+git push -u origin feature/cursor-[기능명]
+```
+
+### **2. 개발 사이클**
+```
+코딩 → 테스트 → 커밋 → 푸시 → 반복
+```
+
+### **3. 중간 체크포인트**  
+```bash
+# 진행 상황 저장
+git add . && git commit -m "progress: [진행 상황]"
+git push origin feature/cursor-[기능명]
+```
+
+### **4. 기능 완성**
+```
+"작업 완료" → PR 자동 생성 → Claude Code 인계
+```
+
+---
+
+## 🤝 Claude Code와의 협업 포인트
+
+### **Cursor → Claude 인계 시점**
+- ✅ 기본 기능 구현 완료
+- ✅ UI/UX 프로토타입 완성  
+- ✅ API 엔드포인트 기본 동작
+- ✅ 테스트 케이스 작성 완료
+
+### **인계 메시지 템플릿**
+```
+"Claude, Cursor에서 [기능명] 기본 구현을 완료했습니다.
+
+📋 완료된 작업:
+- [구체적인 구현 내역]
+
+🎯 개선이 필요한 부분:  
+- [성능, 보안, 코드 품질 관점에서]
+
+검토하고 개선해주세요!"
+```
+
+---
+
+**🎵 Happy Coding with Cursor AI! 효율적인 바이브코딩을 위해 이 규칙들을 활용하세요.**

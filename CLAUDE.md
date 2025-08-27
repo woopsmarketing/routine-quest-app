@@ -33,6 +33,72 @@
 
 ---
 
+## 🤖 바이브코딩 자동화 규칙 (Claude Code)
+
+### 트리거 명령어 자동화
+사용자가 다음 명령어를 입력하면 자동으로 해당 Git 작업 수행:
+
+#### **"업로드해줘"** 트리거
+```bash
+# 자동 실행 명령어
+git add .
+git commit -m "feat: claude 작업 완료 - [현재시간] 
+
+🧠 Claude Code 작업 내역:
+- [주요 변경사항 자동 요약]"
+git push origin feature/claude-setup
+```
+
+#### **"검토 완료"** 트리거  
+```bash
+# 위 업로드 명령어 + PR 생성
+gh pr create --title "✨ Claude 작업 완료: [기능명]" \
+  --body "🧠 Claude Code 분석 및 개선 완료
+
+## 📋 작업 내역
+- [변경사항 자동 요약]
+- 코드 품질 개선
+- 성능 최적화  
+- 보안 검토 완료
+
+## 🎯 다음 단계
+- [ ] CI/CD 파이프라인 검증
+- [ ] develop 브랜치 통합 테스트
+- [ ] main 브랜치 배포 준비" \
+  --base develop \
+  --head feature/claude-setup
+```
+
+#### **브랜치 전략**
+- **현재 브랜치**: `feature/claude-setup` (Claude Code 전용)
+- **타깃 브랜치**: `develop` (통합 테스트용)
+- **최종 목표**: `main` (프로덕션 배포)
+
+### 워크플로우 단계별 역할
+
+#### **Phase 1: 분석 및 설계 (Claude Code 담당)**
+```
+사용자: "XXX 기능 분석하고 설계해줘"
+→ 아키텍처 분석, DB 설계, API 명세 작성
+→ "업로드해줘" → feature/claude-setup에 자동 커밋
+```
+
+#### **Phase 2: 코드 리뷰 및 개선 (Claude Code 담당)**
+```
+사용자: "Cursor 작업 결과 리뷰하고 개선해줘"  
+→ 코드 품질 분석, 리팩토링, 성능 최적화
+→ "검토 완료" → develop 브랜치로 PR 자동 생성
+```
+
+#### **Phase 3: 최종 검증 (Claude Code 담당)**
+```
+사용자: "develop 브랜치 최종 검토해줘"
+→ 통합 테스트 결과 분석, 배포 준비 상태 확인
+→ "배포 준비" → main 브랜치로 PR 생성 (수동 확인 필요)
+```
+
+---
+
 ## 🎯 프로젝트 개요
 
 **Routine Quest App** - "다음 1스텝"만 보여주는 순서 기반 퀘스트형 루틴 앱

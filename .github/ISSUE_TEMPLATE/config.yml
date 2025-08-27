@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🎵 바이브코딩 가이드
+    url: https://github.com/your-username/routine-quest-app/blob/main/docs/VIBECODING-GUIDE.md
+    about: Cursor-Claude 바이브코딩 개발 가이드를 확인하세요
+  - name: 💬 Discord 커뮤니티
+    url: https://discord.gg/your-server
+    about: 실시간 바이브코딩 세션을 위한 Discord 채널
+  - name: 📚 개발 문서
+    url: https://github.com/your-username/routine-quest-app/blob/main/CLAUDE.md
+    about: 프로젝트 개발 가이드라인 및 아키텍처 문서
