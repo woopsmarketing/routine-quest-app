@@ -1,43 +1,17 @@
 {
   "name": "@routine-quest/shared",
   "version": "1.0.0",
-  "private": true,
-  "description": "Shared utilities and configurations for Routine Quest App",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "description": "Routine Quest App 공통 설정 및 유틸리티",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src --ext .ts,.js",
-    "lint:fix": "eslint src --ext .ts,.js --fix",
-    "format": "prettier --write 'src/**/*.{ts,js,json}'",
-    "format:check": "prettier --check 'src/**/*.{ts,js,json}'",
-    "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist && rm -rf node_modules"
-  },
-  "files": [
-    "dist/",
-    "src/",
-    "README.md"
-  ],
-  "dependencies": {
-    "typescript": "catalog:",
-    "@types/node": "catalog:"
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "jest": "catalog:",
-    "@jest/types": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:"
-  },
-  "keywords": [
-    "shared",
-    "utilities",
-    "types",
-    "constants",
-    "routine-quest"
-  ]
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
 }

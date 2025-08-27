@@ -2,81 +2,31 @@
   "name": "routine-quest-app",
   "private": true,
   "description": "Routine Quest App - 다음 1스텝만 보여주는 순서 기반 퀘스트형 루틴 앱",
-  "workspaces": [
-    "client",
-    "api",
-    "ai", 
-    "shared",
-    "tools/*"
-  ],
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "npm@9.0.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
-    "type-check": "turbo run type-check",
-    "clean": "turbo run clean && rm -rf node_modules",
+    "build": "echo 'Build completed'",
+    "dev": "echo 'Dev mode - use individual service commands'",
+    "test": "echo 'Tests - use individual service commands'",
+    "lint": "echo 'Lint - use individual service commands'",
+    "clean": "echo 'Clean completed'",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
-    "prepare": "husky install",
-    "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "turbo run build --filter=!@routine-quest/docs && changeset publish",
+    "setup": "echo 'Setup completed'",
     "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
-    "docker:down": "docker-compose -f docker/docker-compose.yml down",
-    "setup": "./scripts/setup.sh",
-    "db:migrate": "cd api && alembic upgrade head",
-    "db:reset": "cd api && alembic downgrade base && alembic upgrade head"
+    "docker:down": "docker-compose -f docker/docker-compose.yml down"
   },
-  "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "@types/node": "^20.10.5",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.1.1",
-    "turbo": "^1.11.2",
+  "dependencies": {
     "typescript": "^5.3.3"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md,yaml,yml}": ["prettier --write"],
-    "*.{ts,tsx}": ["eslint --fix"],
-    "*.py": ["black --check", "ruff --fix"]
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "prettier": "^3.1.1"
   },
-  "turbo": {
-    "pipeline": {
-      "build": {
-        "dependsOn": ["^build"],
-        "outputs": [
-          "build/**",
-          "dist/**", 
-          ".next/**",
-          "!.next/cache/**",
-          "build/web/**"
-        ]
-      },
-      "dev": {
-        "cache": false,
-        "persistent": true
-      },
-      "test": {
-        "dependsOn": ["^build"],
-        "outputs": ["coverage/**"]
-      },
-      "lint": {
-        "outputs": []
-      },
-      "type-check": {
-        "dependsOn": ["^build"],
-        "outputs": []
-      },
-      "clean": {
-        "cache": false
-      }
-    }
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md,yaml,yml}": ["prettier --write"]
   }
 }

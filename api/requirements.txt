@@ -1,57 +1,20 @@
-# 🐍 백엔드 API 의존성 패키지들
-# FastAPI 기반 루틴 퀘스트 API 서버
+# FastAPI 백엔드 의존성
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
 
-# 🚀 웹 프레임워크 및 서버
-fastapi==0.104.1              # 메인 웹 프레임워크
-uvicorn[standard]==0.24.0     # ASGI 서버
-gunicorn==21.2.0              # 프로덕션 WSGI 서버
-
-# 🗄️ 데이터베이스 및 ORM
-sqlalchemy==2.0.23            # ORM 및 데이터베이스 추상화
-alembic==1.12.1               # 데이터베이스 마이그레이션
-psycopg2-binary==2.9.9        # PostgreSQL 드라이버
-asyncpg==0.29.0               # 비동기 PostgreSQL 드라이버
-
-# 🔄 캐시 및 큐
-redis==5.0.1                  # Redis 클라이언트
-celery==5.3.4                 # 백그라운드 작업 큐
-flower==2.0.1                 # Celery 모니터링 (개발용)
-
-# 🔐 인증 및 보안
-python-jose[cryptography]==3.3.0  # JWT 토큰 처리
-passlib[bcrypt]==1.7.4        # 패스워드 해싱
-python-multipart==0.0.6       # 폼 데이터 처리
-cryptography==41.0.7          # 암호화 라이브러리
-
-# 🔥 Firebase 서비스들
-firebase-admin==6.2.0         # Firebase Admin SDK
-google-cloud-firestore==2.13.1    # Firestore (필요시)
-
-# 📊 모니터링 및 로깅
-sentry-sdk[fastapi]==1.38.0   # 에러 추적
-structlog==23.2.0             # 구조화된 로깅
-rich==13.7.0                  # 예쁜 콘솔 출력
-
-# 🧪 테스트
-pytest==7.4.3                # 테스트 프레임워크
-pytest-asyncio==0.21.1       # 비동기 테스트
-httpx==0.25.2                 # HTTP 클라이언트 (테스트용)
-factory-boy==3.3.0           # 테스트 데이터 팩토리
-
-# 🛠️ 개발 도구
-python-dotenv==1.0.0         # 환경변수 관리
-pydantic[email]==2.5.0       # 데이터 검증
-pydantic-settings==2.1.0     # 설정 관리
-
-# 📦 유틸리티
-python-dateutil==2.8.2       # 날짜 처리
-pytz==2023.3                 # 타임존 처리
-Pillow==10.1.0                # 이미지 처리
-aiofiles==23.2.1              # 비동기 파일 처리
-
-# 🌐 HTTP 및 외부 API
-httpx==0.25.2                # 비동기 HTTP 클라이언트
-aiohttp==3.9.1               # 대안 HTTP 클라이언트
-
-# 💳 결제 및 구독 (나중에 필요시)
-stripe==7.8.0                # Stripe 결제 처리
+# 개발 도구
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+black==23.11.0
+ruff==0.1.6
+mypy==1.7.1

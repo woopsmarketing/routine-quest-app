@@ -23,13 +23,9 @@
     "build": "echo 'API build complete'",
     "clean": "find . -type d -name __pycache__ -delete && find . -name '*.pyc' -delete"
   },
-  "dependencies": {
-    "python": ">=3.11"
-  },
+  "dependencies": {},
   "devDependencies": {},
-  "engines": {
-    "python": ">=3.11"
-  },
+  "engines": {},
   "files": [
     "app/",
     "alembic/",
