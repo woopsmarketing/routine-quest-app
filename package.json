@@ -2,7 +2,7 @@
   "name": "routine-quest-app",
   "private": true,
   "description": "Routine Quest App - 다음 1스텝만 보여주는 순서 기반 퀘스트형 루틴 앱",
-  "packageManager": "npm@9.0.0",
+  "packageManager": "pnpm@8.15.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
