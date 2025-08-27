@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 🔍 Pre-commit 코드 품질 검사
+echo "🔍 Pre-commit 코드 품질 검사를 실행합니다..."
+
+# Lint-staged를 통한 스테이징된 파일만 검사
+pnpm lint-staged
+
+# Python 가상환경 활성화 후 백엔드 린트 검사
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    source venv/Scripts/activate
+else
+    source venv/bin/activate
+fi
+
+# 스테이징된 Python 파일이 있는지 확인
+STAGED_PYTHON=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(py)$' || true)
+
+if [ -n "$STAGED_PYTHON" ]; then
+    echo "🐍 Python 파일 품질 검사 중..."
+    
+    # Black 포맷팅 검사
+    echo "📝 Black 포맷팅 검사..."
+    black --check $STAGED_PYTHON
+    
+    # Ruff 린트 검사
+    echo "🔍 Ruff 린트 검사..."
+    ruff check $STAGED_PYTHON
+    
+    # MyPy 타입 검사 (api와 ai 디렉토리에서만)
+    for file in $STAGED_PYTHON; do
+        if [[ $file == api/* ]] || [[ $file == ai/* ]]; then
+            echo "🔍 MyPy 타입 검사: $file"
+            mypy $file
+        fi
+    done
+fi
+
+# Flutter 파일이 변경된 경우 dart analyze 실행
+STAGED_DART=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(dart)$' || true)
+
+if [ -n "$STAGED_DART" ]; then
+    echo "📱 Flutter 파일 검사 중..."
+    cd client
+    
+    # Dart 포맷팅 검사
+    echo "📝 Dart 포맷팅 검사..."
+    dart format --set-exit-if-changed $STAGED_DART
+    
+    # Dart 분석
+    echo "🔍 Dart 분석..."
+    flutter analyze --no-fatal-infos
+    
+    cd ..
+fi
+
+echo "✅ Pre-commit 검사가 완료되었습니다!"

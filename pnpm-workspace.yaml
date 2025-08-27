@@ -1,0 +1,63 @@
+# PNPM Workspace Configuration
+# Routine Quest App - 모노레포 패키지 워크스페이스
+
+packages:
+  # Core application packages
+  - 'client'
+  - 'api' 
+  - 'ai'
+  - 'shared'
+  
+  # Development and tooling packages
+  - 'tools/*'
+  - 'packages/*'
+  
+  # Documentation (if needed)
+  - 'docs'
+
+# Catalog for shared dependency versions
+catalog:
+  # Node.js/TypeScript versions
+  typescript: ^5.3.3
+  '@types/node': ^20.10.5
+  
+  # Testing
+  jest: ^29.7.0
+  '@jest/types': ^29.6.3
+  
+  # Linting & Formatting  
+  eslint: ^8.56.0
+  prettier: ^3.1.1
+  
+  # Build tools
+  turbo: ^1.11.2
+  '@changesets/cli': ^2.27.1
+
+# Shared configuration
+shared-workspace-lockfile: true
+link-workspace-packages: true
+prefer-workspace-packages: true
+
+# Package resolution settings
+resolution-mode: 'highest'
+auto-install-peers: true
+dedupe-peer-dependents: true
+
+# Hoisting patterns
+hoist-pattern:
+  - '@types/*'
+  - 'eslint*'
+  - 'prettier*'
+  - 'typescript'
+  
+# Public hoisting (available to all packages)
+public-hoist-pattern:
+  - '*types*'
+  - '*eslint*'
+  - '*prettier*'
+
+# Shamefully-hoist for problematic packages
+shamefully-hoist: false
+
+# Enable shell completion
+enable-pre-post-scripts: true

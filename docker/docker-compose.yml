@@ -1,0 +1,143 @@
+# 🐳 개발 환경용 Docker Compose 설정
+# 전체 루틴 퀘스트 앱 스택을 로컬에서 실행
+# PostgreSQL, Redis, 백엔드 API, AI 서비스를 한 번에 구동
+
+version: '3.8'
+
+services:
+  # 🗄️ PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15-alpine
+    container_name: routine-quest-db
+    environment:
+      POSTGRES_USER: routine_user
+      POSTGRES_PASSWORD: routine_password
+      POSTGRES_DB: routine_quest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U routine_user -d routine_quest"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 🔄 Redis 캐시 및 큐
+  redis:
+    image: redis:7-alpine
+    container_name: routine-quest-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 🚀 메인 백엔드 API
+  api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: routine-quest-api
+    environment:
+      - ENVIRONMENT=development
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=routine_user
+      - POSTGRES_PASSWORD=routine_password
+      - POSTGRES_DB=routine_quest
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - AI_SERVICE_URL=http://ai:8001
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../api:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # 🤖 AI 마이크로서비스
+  ai:
+    build:
+      context: ../ai
+      dockerfile: Dockerfile
+    container_name: routine-quest-ai
+    environment:
+      - ENVIRONMENT=development
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    ports:
+      - "8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../ai:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+  # 🌸 Celery Worker (백그라운드 작업)
+  celery-worker:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: routine-quest-worker
+    environment:
+      - ENVIRONMENT=development
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=routine_user
+      - POSTGRES_PASSWORD=routine_password
+      - POSTGRES_DB=routine_quest
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=dev-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../api:/app
+    command: celery -A app.core.celery worker --loglevel=info
+
+  # 🌺 Celery Beat (스케줄러)
+  celery-beat:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: routine-quest-scheduler
+    environment:
+      - ENVIRONMENT=development
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=routine_user
+      - POSTGRES_PASSWORD=routine_password
+      - POSTGRES_DB=routine_quest
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=dev-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../api:/app
+    command: celery -A app.core.celery beat --loglevel=info
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# 🌐 네트워크 (기본 bridge 사용)
+networks:
+  default:
+    name: routine-quest-network

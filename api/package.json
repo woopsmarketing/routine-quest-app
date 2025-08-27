@@ -1,0 +1,47 @@
+{
+  "name": "@routine-quest/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FastAPI backend for Routine Quest App",
+  "main": "app/main.py",
+  "scripts": {
+    "dev": "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "start": "gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000",
+    "test": "pytest -v",
+    "test:unit": "pytest tests/unit -v",
+    "test:integration": "pytest tests/integration -v", 
+    "test:coverage": "pytest --cov=app --cov-report=html --cov-report=term",
+    "lint": "ruff check app tests",
+    "lint:fix": "ruff check app tests --fix",
+    "format": "black app tests",
+    "format:check": "black app tests --check",
+    "type-check": "mypy app",
+    "db:migrate": "alembic upgrade head",
+    "db:downgrade": "alembic downgrade -1",
+    "db:reset": "alembic downgrade base && alembic upgrade head",
+    "db:revision": "alembic revision --autogenerate",
+    "build": "echo 'API build complete'",
+    "clean": "find . -type d -name __pycache__ -delete && find . -name '*.pyc' -delete"
+  },
+  "dependencies": {
+    "python": ">=3.11"
+  },
+  "devDependencies": {},
+  "engines": {
+    "python": ">=3.11"
+  },
+  "files": [
+    "app/",
+    "alembic/",
+    "requirements.txt",
+    "alembic.ini"
+  ],
+  "keywords": [
+    "fastapi",
+    "python",
+    "api",
+    "routine",
+    "quest",
+    "backend"
+  ]
+}

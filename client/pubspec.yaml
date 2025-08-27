@@ -1,0 +1,89 @@
+# Flutter 클라이언트 - 순서 기반 퀘스트형 루틴 앱
+# iOS/Android/Web 크로스플랫폼 지원
+name: routine_quest
+description: 다음 1스텝만 보여주는 혁신적인 습관 관리 앱
+
+# 프로젝트 메타데이터
+publish_to: 'none' # private 프로젝트
+version: 1.0.0+1
+
+# Flutter SDK 버전 제약
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+# 의존성 패키지들
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 상태관리 (Riverpod)
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+
+  # 라우팅
+  go_router: ^12.1.3
+
+  # 로컬 데이터베이스
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  
+  # 네트워킹
+  dio: ^5.4.0
+  retrofit: ^4.0.3
+  json_annotation: ^4.8.1
+
+  # Firebase 서비스들
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  firebase_analytics: ^10.7.4
+  firebase_crashlytics: ^3.4.8
+  firebase_messaging: ^14.7.10
+  firebase_remote_config: ^4.3.8
+
+  # 광고 및 구독
+  google_mobile_ads: ^4.0.0
+  in_app_purchase: ^3.1.11
+
+  # UI/UX 패키지
+  flutter_animate: ^4.3.0
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+
+  # 유틸리티
+  shared_preferences: ^2.2.2
+  package_info_plus: ^4.2.0
+  device_info_plus: ^9.1.1
+  connectivity_plus: ^5.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # 코드 생성 도구들
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.7
+  riverpod_generator: ^2.3.9
+  retrofit_generator: ^8.0.6
+  json_serializable: ^6.7.1
+  isar_generator: ^3.1.0+1
+
+# Flutter 설정
+flutter:
+  uses-material-design: true
+  
+  # 에셋 파일들
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+    - assets/sounds/
+
+  # 폰트 설정
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+        - asset: assets/fonts/Pretendard-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700

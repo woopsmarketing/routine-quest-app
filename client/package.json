@@ -1,0 +1,47 @@
+{
+  "name": "@routine-quest/client",
+  "version": "1.0.0+1",
+  "private": true,
+  "description": "Flutter client for Routine Quest App - Cross-platform mobile & web",
+  "scripts": {
+    "dev": "flutter run -d web-server --web-port 3000",
+    "dev:mobile": "flutter run",
+    "dev:ios": "flutter run -d ios",
+    "dev:android": "flutter run -d android",
+    "build": "flutter build web --release",
+    "build:android": "flutter build apk --release",
+    "build:ios": "flutter build ios --release",
+    "build:web": "flutter build web --release --web-renderer html",
+    "test": "flutter test",
+    "test:integration": "flutter test integration_test/",
+    "test:coverage": "flutter test --coverage && genhtml coverage/lcov.info -o coverage/html",
+    "lint": "flutter analyze",
+    "format": "dart format .",
+    "format:check": "dart format --set-exit-if-changed .",
+    "type-check": "flutter analyze --no-fatal-infos",
+    "codegen": "flutter packages pub run build_runner build --delete-conflicting-outputs",
+    "codegen:watch": "flutter packages pub run build_runner watch --delete-conflicting-outputs",
+    "deps": "flutter pub get",
+    "deps:upgrade": "flutter pub upgrade",
+    "clean": "flutter clean && flutter pub get",
+    "doctor": "flutter doctor"
+  },
+  "engines": {
+    "flutter": ">=3.16.0"
+  },
+  "files": [
+    "lib/",
+    "assets/",
+    "pubspec.yaml",
+    "analysis_options.yaml"
+  ],
+  "keywords": [
+    "flutter",
+    "dart",
+    "mobile",
+    "web",
+    "routine",
+    "quest",
+    "habit-tracker"
+  ]
+}

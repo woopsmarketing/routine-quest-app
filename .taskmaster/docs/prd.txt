@@ -1,0 +1,117 @@
+<context>
+# Overview
+본 제품은 **순서 기반 퀘스트형 루틴 앱**(모바일/웹)이다. 기존 체크리스트형 습관 앱과 달리, 사용자는 '다음 1개 스텝'만 보며 루틴을 순서대로 수행한다. 의사결정 피로를 줄이고(선택지 최소화), 짧고 확정적인 보상(하프틱/XP/코스메틱)과 팀 기반 사회적 약속(소규모 길드 게이지)으로 **재방문 빈도와 30일 잔존율(D30)**을 끌어올린다.
+타깃은 생산성·건강 루틴을 꾸준히 만들고 싶은 개인(학생·프리랜서·직장인)과 소규모 스터디/팀이다. 무료는 최소 체험 + 광고, 유료는 Basic/Pro/Team 구독으로 수익화한다. AI 코치는 짧은 개인화 팁만 제공(토큰 상한+캐싱)하여 원가를 통제한다.
+
+# Core Features
+1) **퀘스트 체인(다음 1스텝 UI)**
+- 무엇을: 오늘 루틴을 순서가 있는 스텝 체인으로 실행. 화면에는 항상 "다음 1개"만 표시.
+- 왜: 선택지 축소로 실행 장벽↓, 흐름 중단 최소화.
+- 어떻게: Flutter 위젯(NextStepCard) + 로컬 캐시 → 완료/스킵 이벤트를 서버에 기록하고 XP/콤보 계산.
+
+2) **퍼스널 부스트 타임(PBT)**
+- 무엇을: 사용자가 설정한 루틴 시작 시각 ±30분에만 XP +10% 보너스.
+- 왜: "지금 들어올 이유"를 매일 생성(FOMO). 개인화 알림으로 오픈률↑.
+- 어떻게: 백엔드 스케줄러가 PBT 푸시 예약 → 클라이언트가 창 진입 확인 시 부스트 표시.
+
+3) **스트릭 링 + 보호권**
+- 무엇을: 연속일수에 따라 프로필 링 색/광택 단계 상승. 주1회 자동 보호권으로 스트릭 유지.
+- 왜: 성취감 시각화, 좌절 최소화로 장기 잔존↑.
+- 어떻게: streak counter와 weekly grace token 로직. 실패/복귀 시 상태 전이 명확화.
+
+4) **시즌 패스(4~8주, 확정 보상)**
+- 무엇을: 일/주 목표 달성 시 코스메틱(테마·링·배지 파편 4조합) 확정 지급.
+- 왜: 장기 목표 제시, 무작위 보상 없이 예측 가능한 동기.
+- 어떻게: 시즌 테이블/규칙 엔진, 보상 수령 API, 클라 진행 트랙 UI.
+
+5) **길드 주간 게이지(3~10인)**
+- 무엇을: 팀 평균 완료율 60%↑면 다음 주 XP +5% 버프.
+- 왜: DM 없이도 '사회적 약속'으로 재방문 유도.
+- 어떻게: 주간 집계 배치 → 게이지 퍼센트 계산 → 읽기 전용 위젯에 표출.
+
+6) **루틴 편집기(변경 제한/쿨다운)**
+- 무엇을: 스텝 추가/삭제/순서 변경에 월 한도와 쿨다운(플랜별)을 둠. 사소한 편집은 제외.
+- 왜: 과도한 변경으로 루틴이 해체되는 것을 방지, 일관성↑.
+- 어떻게: 서버에서 변경 시도 검증 → `applies tomorrow` 미리보기 → 정책 위반 시 가드.
+
+7) **AI 코치 카드(짧은 팁, 월 n회)**
+- 무엇을: "물→유산균 순서 바꾸면 성공률↑" 같은 200~300자 팁.
+- 왜: 장문 상담 대신 실행 가능한 한 줄 인사이트로 동기 유지, AI 비용 억제.
+- 어떻게: 규칙/통계로 후보 생성 → LLM이 문장화 → Redis 캐싱. 구독 크레딧 차감.
+
+8) **수익화(무료 최소 + Basic/Pro/Team)**
+- 무료: 루틴 1개·5스텝, 히스토리 3일, 체인 완료 후 전면광고 1회(닫기 가능).  
+- Basic(저가): 광고 제거, 무제한 루틴/스텝, 스트릭 보호, 시즌 기본, AI 월 3회.  
+- Pro: 길드/도전장, 시즌 풀보상, 고급 통계, AI 월 15회.  
+- Team: 팀 보드/리포트(좌석 과금).
+
+# User Experience
+- 페르소나:  
+  A) 루틴 초보(습관 실패 경험 多) — 최소 설정·성공 경험 필요.  
+  B) 일/학습 루틴러 — 데이터/통계·연속성 강조.  
+  C) 소규모 팀/스터디 — 주간 목표와 가벼운 공동 집중.
+- 핵심 플로우: 온보딩(목표→기본 체인 추천→PBT 설정) → Today 화면(다음 1스텝 실행) → 체인 완료 요약/보상 → 시즌/길드 진행 확인.
+- UI/UX: 색 대비 4.5:1↑, Material3 토큰(색/타이포/간격) 고정, 모션 160–220ms, 완료 이펙트 ≤400ms, 하프틱 Light, 광고는 완료 화면 1회만.
+</context>
+
+<PRD>
+# Technical Architecture
+- 시스템 구성
+  - 클라이언트: **Flutter**(iOS/Android/Web), 상태관리 **Riverpod**, 라우팅 **go_router**, 로컬 DB **Isar/Drift**, 네트워크 **dio**.
+  - 백엔드 API: **FastAPI**(Python), **PostgreSQL**(SQLAlchemy/Alembic), **Redis**(캐시/큐), **Celery**(배치/스케줄), **S3 호환 스토리지**(R2/S3).
+  - AI 마이크로서비스: FastAPI 분리, LLM 클라이언트(OpenAI/Anthropic 등) + 캐싱(Redis), 배치 생성(Celery).
+  - 인증/푸시/분석: **Firebase Auth**, **FCM**, **Firebase Analytics/Remote Config**.
+  - 광고/구독: **Google Mobile Ads SDK(AdMob)**, **in_app_purchase** + 서버 영수증 검증(Apple/Google Webhook).
+  - 모니터링/배포: Crashlytics(클라), **Sentry**(서버), GitHub Actions(CI), Cloud Run/Cloudtype/EC2(Docker).
+
+- 데이터 모델(요약)
+  - `users(id, tier, tz, pbt_time, streak, grace_tokens, created_at)`
+  - `routines(id, user_id, title, is_public, version, last_changed_at)`
+  - `steps(id, routine_id, "order", title, difficulty, t_ref_sec, type)`
+  - `sessions(id, user_id, routine_id, started_at, finished_at)`
+  - `checkins(id, session_id, step_id, t_spent_sec, status)`
+  - `rewards(id, user_id, type, payload, earned_at)`
+  - `subscriptions(user_id, store, product, purchase_token, status, renews_at)`
+  - `guilds(id, name), guild_members(guild_id, user_id, role)`
+  - 집계: `stats_daily(user_id, date, steps_done, chain_done, streak)`
+
+- 핵심 API(예시)
+  - `/auth/verify` Firebase ID 토큰 검증
+  - `/routines/*` CRUD + 변경 한도/쿨다운 검증
+  - `/session/*` 스텝 완료/스킵, 콤보/XP 계산
+  - `/season/*` 진행/보상 수령
+  - `/guild/*` 가입/주간 게이지 조회(초기 읽기 전용)
+  - `/ai/coach` 한 줄 팁 생성(크레딧 차감, 캐시)
+  - `/iap/apple/notify`, `/iap/google/notify` 스토어 서버 알림
+  - `/iap/verify` 영수증 검증(내부)
+  - `/push/schedule` PBT 푸시 예약
+
+- 인프라 요구사항
+  - API 응답 100–200ms 목표, 수평 확장(무상태), Rate Limit/Request ID/구조화 로깅.
+  - 배포 분리: 코어 API ↔ AI 서비스. 비동기 큐(Celery)로 지연 작업 분리.
+  - CDN/이미지 최적화(WebP/AVIF), HTTPS 필수, 비밀키 Secret Manager.
+
+# Development Roadmap
+- **MVP 요구사항**
+  - 온보딩(목표→기본 체인 추천→PBT 설정), 로그인(Firebase), Today 루프(다음 1스텝, 완료/스킵, XP/스트릭), 체인 완료 요약, PBT 푸시 1종, 로컬 캐시, 체인 완료 후 광고 1회, 페이월/구독(서버 검증), 기본 통계(일별 완료율), 루틴 편집기(변경 제한 최소 로직).
+- **확장 기능**
+  - 스트릭 보호(주1), 복귀 퀘스트(초쉬운 1스텝), 시즌 패스(확정 보상 5–10종), 길드 주간 게이지(읽기), 고급 통계(시간대/실패 패턴), AI 코치(월 n회+캐시), 팀 플랜(웹 대시보드 최소).
+- **고도화**
+  - 도전장, 커스텀 테마/링 풀세트, 위젯/락스크린, 실험 플랫폼(Remote Config), 서버 사이드 이벤트 집계 최적화, 다국어/현지화.
+
+# Logical Dependency Chain
+- 기초: 디자인 토큰/공통 컴포넌트(6종) → 인증/세션 → 루틴/스텝 CRUD + 로컬 캐시.
+- 가시성 빠른 프런트: Today 화면(다음 1스텝) + 완료 요약부터 작동.
+- 수익화/리텐션: 광고 노출(완료 후) → 페이월/구독 검증 → PBT 푸시 → 스트릭/시즌.
+- 분석/AI: 기본 이벤트 로깅 → 일일 집계 → AI 코치(캐시) 순.
+
+# Risks and Mitigations
+- 기술적: 프레임 드롭/콜드 스타트 지연 → const/selector, Sliver+itemExtent, 이미지 다운샘플, 광고/결제 지연 초기화, Impeller+SkSL 프리워밍.
+- MVP 범위 실패: 기능 범람 → Phase별 스코프 락, Today 루프/결제/광고만 우선.
+- 리텐션 부족: 체크리스트화 위험 → '다음 1스텝' 고수, PBT/스트릭 보호/시즌 확정보상으로 동기 강화.
+- AI 비용: 토큰 폭증 → 한 줄 팁(200~300자), 캐싱/배치, 구독 크레딧 상한.
+
+# Appendix
+- 성능 버짓(클라): 콜드 스타트 ≤2–3초(저가형 안드 ≤4초), 99th 프레임 <16.7ms(60Hz), 프레임 드롭 <1%.
+- 이벤트(최소): `onboard_complete`, `trial_start`, `paywall_view`, `purchase_success`, `session_start`, `step_done/skip`, `chain_done`, `ad_shown`, `pbt_start`, `streak_day`, `return_quest_done`, `routine_change_applied`, `ai_tip_request`.
+</PRD>

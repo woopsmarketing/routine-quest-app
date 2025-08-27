@@ -1,0 +1,135 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env.local"
+      ],
+      "outputs": [
+        "build/**",
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "build/web/**",
+        "**/*.pyc",
+        "**/__pycache__/**"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "NODE_ENV",
+        "FLUTTER_WEB_PORT",
+        "API_PORT", 
+        "AI_PORT",
+        "DATABASE_URL",
+        "REDIS_URL"
+      ]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "test/**",
+        "tests/**",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": [
+        "coverage/**",
+        "test-results/**",
+        ".coverage"
+      ]
+    },
+    "test:unit": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "test/unit/**",
+        "tests/unit/**"
+      ],
+      "outputs": ["coverage/unit/**"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build", "db:setup"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "test/integration/**",
+        "tests/integration/**"
+      ],
+      "outputs": ["coverage/integration/**"]
+    },
+    "lint": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".eslintrc*",
+        ".pylintrc",
+        "analysis_options.yaml"
+      ],
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "tsconfig.json",
+        "pubspec.yaml",
+        "**/*.py"
+      ],
+      "outputs": []
+    },
+    "format": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".prettierrc*",
+        "pyproject.toml"
+      ],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false,
+      "outputs": []
+    },
+    "db:setup": {
+      "cache": false,
+      "inputs": [
+        "alembic/**",
+        "migrations/**"
+      ]
+    },
+    "db:migrate": {
+      "dependsOn": ["db:setup"],
+      "cache": false
+    },
+    "codegen": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "**/*.dart",
+        "pubspec.yaml"
+      ],
+      "outputs": [
+        "**/*.g.dart",
+        "**/*.freezed.dart"
+      ]
+    }
+  },
+  "globalDependencies": [
+    ".env",
+    ".env.local",
+    "docker-compose.yml",
+    "docker/docker-compose.yml"
+  ],
+  "globalEnv": [
+    "CI",
+    "NODE_ENV",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "FIREBASE_PROJECT_ID",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY"
+  ]
+}

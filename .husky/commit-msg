@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 🔍 Conventional Commits 검사
+echo "🔍 커밋 메시지 형식을 검사합니다..."
+
+# 커밋 메시지 파일 읽기
+commit_message=$(cat $1)
+
+# Conventional Commits 패턴
+# type(scope): description
+# 예: feat(api): add user authentication endpoint
+conventional_pattern="^(feat|fix|docs|style|refactor|test|chore|ci|build|perf)(\(.+\))?: .{1,100}$"
+
+if [[ ! $commit_message =~ $conventional_pattern ]]; then
+    echo "❌ 커밋 메시지가 Conventional Commits 형식에 맞지 않습니다!"
+    echo ""
+    echo "올바른 형식:"
+    echo "  type(scope): description"
+    echo ""
+    echo "타입 (필수):"
+    echo "  feat:     새로운 기능"
+    echo "  fix:      버그 수정"
+    echo "  docs:     문서 변경"
+    echo "  style:    코드 스타일 변경 (로직 변경 없음)"
+    echo "  refactor: 리팩토링"
+    echo "  test:     테스트 추가/수정"
+    echo "  chore:    빌드/설정 변경"
+    echo "  ci:       CI/CD 설정 변경"
+    echo "  build:    빌드 시스템 변경"
+    echo "  perf:     성능 개선"
+    echo ""
+    echo "스코프 (선택):"
+    echo "  api, ai, client, shared, docker, scripts"
+    echo ""
+    echo "예시:"
+    echo "  feat(api): add user authentication endpoint"
+    echo "  fix(client): resolve navigation bug"
+    echo "  docs: update README with setup instructions"
+    echo ""
+    exit 1
+fi
+
+echo "✅ 커밋 메시지 형식이 올바릅니다!"
