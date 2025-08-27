@@ -54,3 +54,7 @@ cd ai && uvicorn app.main:app --reload --port 8001
 ## 📄 라이선스
 
 MIT License
+
+---
+
+*마지막 업데이트: 2025년 8월 27일 - CI/CD 파이프라인 테스트*
