@@ -47,6 +47,7 @@ jobs:
       cursor_changes: ${{ steps.detect.outputs.cursor_changes }}
       claude_changes: ${{ steps.detect.outputs.claude_changes }}
       sync_required: ${{ steps.detect.outputs.sync_required }}
+      feature_complete: ${{ steps.detect.outputs.feature_complete }}
     
     steps:
       - uses: actions/checkout@v4
@@ -68,18 +69,20 @@ jobs:
           fi
 
           # 변경사항 분석
-          echo "cursor_changes=$(git log --oneline -1 | grep -c 'cursor\|ui\|frontend' || echo 0)" >> $GITHUB_OUTPUT
-          echo "claude_changes=$(git log --oneline -1 | grep -c 'claude\|api\|backend' || echo 0)" >> $GITHUB_OUTPUT
+          CURSOR_CHANGES=$(git log --oneline -1 | grep -c 'cursor\|ui\|frontend' || echo 0)
+          CLAUDE_CHANGES=$(git log --oneline -1 | grep -c 'claude\|api\|backend' || echo 0)
+          echo "cursor_changes=${CURSOR_CHANGES}" >> $GITHUB_OUTPUT
+          echo "claude_changes=${CLAUDE_CHANGES}" >> $GITHUB_OUTPUT
           
-          # 마지막 커밋이 30분 이전인지 확인 (동기화 필요)
-          LAST_COMMIT_TIME=$(git log -1 --format=%ct)
-          CURRENT_TIME=$(date +%s)
-          TIME_DIFF=$((($CURRENT_TIME - $LAST_COMMIT_TIME) / 60))
+          # 기능 완성 체크 (커밋 메시지에 완성 키워드가 있는지 확인)
+          COMPLETION_CHECK=$(git log --oneline -1 | grep -E -c 'complete|완료|완성|done|finish|feat:' || echo 0)
           
-          if [ $TIME_DIFF -gt 30 ]; then
+          if [ $COMPLETION_CHECK -gt 0 ]; then
             echo "sync_required=true" >> $GITHUB_OUTPUT
+            echo "feature_complete=true" >> $GITHUB_OUTPUT
           else
             echo "sync_required=false" >> $GITHUB_OUTPUT
+            echo "feature_complete=false" >> $GITHUB_OUTPUT
           fi
 
       - name: 📊 Session summary
@@ -88,6 +91,7 @@ jobs:
           echo "  - Session Type: ${{ steps.detect.outputs.session_type }}"
           echo "  - Cursor Changes: ${{ steps.detect.outputs.cursor_changes }}"
           echo "  - Claude Changes: ${{ steps.detect.outputs.claude_changes }}"
+          echo "  - Feature Complete: ${{ steps.detect.outputs.feature_complete }}"
           echo "  - Sync Required: ${{ steps.detect.outputs.sync_required }}"
           
       # 🤖 자동화 스크립트 권한 설정
@@ -309,7 +313,7 @@ jobs:
           echo "- **빠른 검사**: ${{ needs.quick-check.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "🚀 **다음 단계**: 30분마다 develop 브랜치로 동기화됩니다." >> $GITHUB_STEP_SUMMARY
+          echo "🚀 **다음 단계**: 기능 완료 커밋 시 자동으로 develop 브랜치로 PR이 생성됩니다." >> $GITHUB_STEP_SUMMARY
 
   # ===================================
   # 🔔 Discord/Slack 알림 (선택사항)
