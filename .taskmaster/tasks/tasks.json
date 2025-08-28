@@ -19,9 +19,7 @@
         "details": "Define color, typography, and spacing tokens per Material3. Create core widgets: NextStepCard, Button, Input, Modal, ProgressRing, RewardEffect. Ensure accessibility (contrast ≥4.5:1), motion (160–220ms), and haptics (Light). Use Riverpod for state, go_router for navigation.",
         "testStrategy": "Snapshot and golden tests for widgets. Manual accessibility and motion timing checks.",
         "priority": "high",
-        "dependencies": [
-          1
-        ],
+        "dependencies": [1],
         "status": "pending",
         "subtasks": []
       },
@@ -32,10 +30,7 @@
         "details": "Configure Firebase Auth for email/social login. Implement token verification in FastAPI (/auth/verify). Store user profile in PostgreSQL. Sync user tier, timezone, and PBT time. Use FCM for push tokens.",
         "testStrategy": "Unit and integration tests for login/logout. Simulate token expiry and invalid tokens. Manual test for FCM registration.",
         "priority": "high",
-        "dependencies": [
-          1,
-          2
-        ],
+        "dependencies": [1, 2],
         "status": "pending",
         "subtasks": []
       },
@@ -46,9 +41,7 @@
         "details": "Use FastAPI for /routines/* and /steps/* endpoints. Enforce monthly edit limits and cooldowns per plan. On client, use Isar/Drift for offline cache, sync with dio. Show 'applies tomorrow' preview. Guard against policy violations.",
         "testStrategy": "API tests for CRUD and policy enforcement. Client-side tests for cache sync and offline/online transitions.",
         "priority": "high",
-        "dependencies": [
-          3
-        ],
+        "dependencies": [3],
         "status": "pending",
         "subtasks": []
       },
@@ -59,9 +52,7 @@
         "details": "Flutter: NextStepCard widget, progress indicator, completion/skip buttons. Backend: /session/* and /checkins endpoints for event logging, XP/combo logic. Show summary and reward effect after chain completion. Use Riverpod for state, Isar for local session cache.",
         "testStrategy": "Widget and integration tests for step flow. API tests for session/checkin logic. Manual test for reward effects and summary.",
         "priority": "high",
-        "dependencies": [
-          4
-        ],
+        "dependencies": [4],
         "status": "pending",
         "subtasks": []
       },
@@ -72,9 +63,7 @@
         "details": "Flutter: Integrate AdMob for interstitial ads (show once after chain completion). Implement paywall UI and in_app_purchase for Basic/Pro/Team. Backend: /iap/verify, /iap/apple/notify, /iap/google/notify for receipt validation. Update user tier on success.",
         "testStrategy": "Simulate ad display and close. Test purchase flows and invalid receipts. Manual test for paywall gating and plan upgrades.",
         "priority": "high",
-        "dependencies": [
-          5
-        ],
+        "dependencies": [5],
         "status": "pending",
         "subtasks": []
       },
@@ -85,10 +74,7 @@
         "details": "Client: UI for PBT setting during onboarding and in settings. Backend: /push/schedule endpoint, Celery for scheduling FCM pushes ±30min of PBT. Apply XP +10% in /session/* if within window. Use Firebase Remote Config for notification tuning.",
         "testStrategy": "Unit tests for PBT logic. Simulate push delivery and XP boost. Manual test for notification timing and UI feedback.",
         "priority": "medium",
-        "dependencies": [
-          5,
-          6
-        ],
+        "dependencies": [5, 6],
         "status": "pending",
         "subtasks": []
       },
@@ -99,9 +85,7 @@
         "details": "Backend: Update streak and grace_tokens in users table. Logic for ring color/gloss per streak. Grant 1 grace token/week. On failure/return, update state. Client: Visualize ring, show grace token usage, and transitions.",
         "testStrategy": "API tests for streak/grace logic. UI tests for ring visualization and state transitions.",
         "priority": "medium",
-        "dependencies": [
-          5
-        ],
+        "dependencies": [5],
         "status": "pending",
         "subtasks": []
       },
@@ -112,10 +96,7 @@
         "details": "Backend: /season/* endpoints, season/reward tables, rules engine for progress and reward eligibility. Client: Season track UI, reward claim flow, cosmetic inventory. Use S3/R2 for cosmetic assets.",
         "testStrategy": "API tests for reward eligibility and claiming. UI tests for season progress and reward effects.",
         "priority": "medium",
-        "dependencies": [
-          5,
-          6
-        ],
+        "dependencies": [5, 6],
         "status": "pending",
         "subtasks": []
       },
@@ -126,10 +107,7 @@
         "details": "Backend: /guild/* endpoints, guilds/guild_members tables, batch job (Celery) for weekly aggregation. Calculate gauge percent, apply XP +5% if threshold met. Client: Read-only guild widget, progress display.",
         "testStrategy": "API tests for aggregation and buff logic. UI tests for guild gauge display.",
         "priority": "medium",
-        "dependencies": [
-          5,
-          6
-        ],
+        "dependencies": [5, 6],
         "status": "pending",
         "subtasks": []
       },
@@ -140,10 +118,7 @@
         "details": "FastAPI microservice: Integrate OpenAI/Anthropic LLM (latest stable API), Redis for tip caching, Celery for batch tip generation. Expose /ai/coach endpoint. Enforce monthly credit limits per plan. Client: Display tip card, request tip, deduct credit.",
         "testStrategy": "Unit/integration tests for tip generation, caching, and credit logic. Manual test for tip display and LLM cost control.",
         "priority": "medium",
-        "dependencies": [
-          5,
-          6
-        ],
+        "dependencies": [5, 6],
         "status": "pending",
         "subtasks": []
       },
@@ -154,10 +129,7 @@
         "details": "Client: Log events (onboard_complete, session_start, step_done, etc.) to Firebase Analytics. Backend: Store key events, aggregate into stats_daily table via batch job. Expose stats API for client.",
         "testStrategy": "Verify event delivery in Firebase dashboard. API tests for stats aggregation. Manual test for stats UI.",
         "priority": "medium",
-        "dependencies": [
-          5,
-          6
-        ],
+        "dependencies": [5, 6],
         "status": "pending",
         "subtasks": []
       },
@@ -168,10 +140,7 @@
         "details": "Flutter: Use const constructors, Riverpod selectors, Sliver+itemExtent for lists, image downsampling, Impeller+SkSL prewarming. Backend: Enable API response caching, structured logging, and CDN for assets. Monitor with Sentry/Crashlytics.",
         "testStrategy": "Profile app on low-end devices. Measure cold start, frame time, and memory. Backend: Load test API endpoints.",
         "priority": "medium",
-        "dependencies": [
-          2,
-          5
-        ],
+        "dependencies": [2, 5],
         "status": "pending",
         "subtasks": []
       },
@@ -182,10 +151,7 @@
         "details": "Backend: Enforce HTTPS, use FastAPI middleware for rate limiting (e.g., slowapi), request ID in logs, and structured logging. Store secrets in Secret Manager. Client: Validate SSL pinning. Audit for GDPR/CCPA compliance.",
         "testStrategy": "Penetration and rate limit tests. Manual review of logs and secret access. Compliance checklist.",
         "priority": "medium",
-        "dependencies": [
-          1,
-          3
-        ],
+        "dependencies": [1, 3],
         "status": "pending",
         "subtasks": []
       },
@@ -196,13 +162,7 @@
         "details": "Write OpenAPI specs for all APIs. Document data models, business logic, and deployment steps. Prepare user onboarding guide and FAQ. Use mkdocs or similar for internal docs.",
         "testStrategy": "Peer review of documentation. Validate onboarding steps with new team member.",
         "priority": "low",
-        "dependencies": [
-          1,
-          4,
-          5,
-          6,
-          11
-        ],
+        "dependencies": [1, 4, 5, 6, 11],
         "status": "pending",
         "subtasks": []
       }

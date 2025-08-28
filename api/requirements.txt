@@ -1,4 +1,4 @@
-# FastAPI 백엔드 의존성
+# FastAPI Backend Dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 sqlalchemy==2.0.23
@@ -11,7 +11,7 @@ python-dotenv==1.0.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# 개발 도구
+# Development Tools
 pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.2

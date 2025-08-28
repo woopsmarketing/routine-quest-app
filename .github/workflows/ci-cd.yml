@@ -1,4 +1,4 @@
-# 🚀 CI/CD 파이프라인 
+# 🚀 CI/CD 파이프라인
 # 루틴 퀘스트 앱의 지속적 통합 및 배포
 # Flutter, FastAPI, AI 서비스를 모두 테스트하고 배포
 
@@ -6,9 +6,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
@@ -19,38 +19,38 @@ jobs:
   flutter-test:
     name: Flutter Tests
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.16.0'
-        channel: 'stable'
-    
-    - name: Flutter pub get
-      working-directory: ./client
-      run: flutter pub get
-    
-    - name: Flutter analyze
-      working-directory: ./client
-      run: flutter analyze
-    
-    - name: Flutter test
-      working-directory: ./client
-      run: flutter test
-    
-    # 웹 빌드 테스트
-    - name: Flutter build web
-      working-directory: ./client
-      run: flutter build web --release
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+
+      - name: Flutter pub get
+        working-directory: ./client
+        run: flutter pub get
+
+      - name: Flutter analyze
+        working-directory: ./client
+        run: flutter analyze
+
+      - name: Flutter test
+        working-directory: ./client
+        run: flutter test
+
+      # 웹 빌드 테스트
+      - name: Flutter build web
+        working-directory: ./client
+        run: flutter build web --release
 
   # 🐍 백엔드 API 테스트
   api-test:
     name: API Tests
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -65,7 +65,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-
@@ -75,59 +75,59 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      working-directory: ./api
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Run tests
-      working-directory: ./api
-      env:
-        POSTGRES_SERVER: localhost
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_password
-        POSTGRES_DB: test_db
-        REDIS_URL: redis://localhost:6379
-        SECRET_KEY: test-secret-key
-      run: |
-        pytest
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        working-directory: ./api
+        env:
+          POSTGRES_SERVER: localhost
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret-key
+        run: |
+          pytest
 
   # 🤖 AI 서비스 테스트
   ai-test:
     name: AI Service Tests
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      working-directory: ./ai
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Run tests
-      working-directory: ./ai
-      env:
-        REDIS_URL: redis://localhost:6379
-        SECRET_KEY: test-secret-key
-      run: |
-        pytest
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./ai
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        working-directory: ./ai
+        env:
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret-key
+        run: |
+          pytest
 
   # 🐳 Docker 이미지 빌드 및 배포
   build-and-deploy:
@@ -135,40 +135,40 @@ jobs:
     runs-on: ubuntu-latest
     needs: [flutter-test, api-test, ai-test]
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    # API 이미지 빌드
-    - name: Build and push API image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./api
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest
-    
-    # AI 서비스 이미지 빌드
-    - name: Build and push AI image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./ai
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-ai:latest
-    
-    # Flutter 웹 빌드 및 배포 (예: Firebase Hosting)
-    - name: Build Flutter Web
-      working-directory: ./client
-      run: |
-        flutter pub get
-        flutter build web --release
-    
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # API 이미지 빌드
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest
+
+      # AI 서비스 이미지 빌드
+      - name: Build and push AI image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ai
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-ai:latest
+
+      # Flutter 웹 빌드 및 배포 (예: Firebase Hosting)
+      - name: Build Flutter Web
+        working-directory: ./client
+        run: |
+          flutter pub get
+          flutter build web --release
+
     # TODO: 실제 배포 단계 추가
     # - Cloud Run, Firebase, EC2 등에 배포
     # - 환경변수 및 시크릿 설정

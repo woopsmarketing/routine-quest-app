@@ -28,7 +28,7 @@ jobs:
     name: 🏷️ Release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,11 +41,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          
+
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-          
+
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -54,7 +54,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # Flutter 설정 (클라이언트 버전 관리용)  
+      # Flutter 설정 (클라이언트 버전 관리용)
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -81,17 +81,17 @@ jobs:
         run: |
           # 버전 업데이트
           pnpm changeset version
-          
+
           # 빌드 (릴리스 전 최종 확인)
           pnpm turbo build --filter=!@routine-quest/docs
-          
+
           # 변경사항 커밋
           git add .
           git commit -m "chore: release packages" || echo "No changes to commit"
-          
+
           # GitHub Release 생성 및 태그
           pnpm changeset publish
-          
+
           # 변경사항 푸시
           git push origin main --follow-tags
         env:
@@ -103,13 +103,13 @@ jobs:
         run: |
           # 최신 태그 정보 가져오기
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          
+
           # 릴리스 노트 생성
           echo "## 🎉 Release Notes" > release-notes.md
           echo "" >> release-notes.md
           echo "### Changes since $LATEST_TAG" >> release-notes.md
           echo "" >> release-notes.md
-          
+
           # Changeset에서 변경사항 추출
           if [ -f "CHANGELOG.md" ]; then
             head -50 CHANGELOG.md >> release-notes.md
@@ -121,7 +121,7 @@ jobs:
         run: |
           echo "🚀 릴리스가 완료되었습니다!"
           echo "배포는 별도의 워크플로우에서 진행됩니다."
-          
+
           # 배포 워크플로우 트리거 (선택적)
           # gh workflow run deploy.yml
         env:
@@ -135,7 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: always() && needs.release.result == 'success'
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -144,11 +144,11 @@ jobs:
         run: |
           echo "📢 새로운 릴리스가 배포되었습니다!"
           # 슬랙, 디스코드 등 알림 설정 가능
-          
+
           # 현재 버전 확인
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "🏷️ Version: $CURRENT_VERSION"
-          
+
           # 릴리스 통계
           echo "📊 릴리스 통계:"
           echo "  • 커밋 수: $(git rev-list --count HEAD)"
@@ -158,6 +158,6 @@ jobs:
       - name: 🔄 Prepare next development cycle
         run: |
           echo "🔄 다음 개발 사이클을 준비합니다..."
-          
+
           # 개발 브랜치 정리, 이슈 정리 등
           # 필요에 따라 자동화 작업 추가

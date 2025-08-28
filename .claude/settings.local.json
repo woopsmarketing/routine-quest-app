@@ -17,9 +17,11 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(flutter pub:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": ["D:\\d\\Documents\\routine-quest-app"]
   }
 }

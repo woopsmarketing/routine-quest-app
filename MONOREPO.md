@@ -5,18 +5,21 @@ Routine Quest App이 **Turborepo + PNPM 워크스페이스** 기반 모노레포
 ## 🎯 모노레포 혜택
 
 ### ✅ 개발 효율성
+
 - **병렬 실행**: 모든 작업이 최적화된 병렬 처리
 - **증분 빌드**: 변경된 패키지만 다시 빌드
 - **원격 캐시**: 팀 전체가 빌드 캐시 공유
 - **통합 개발**: 하나의 명령어로 전체 스택 실행
 
 ### ✅ 코드 품질
+
 - **일관된 코드 스타일**: 전체 프로젝트 통일된 린트/포맷팅
 - **공유 설정**: TypeScript, ESLint, Prettier 등 중앙 관리
 - **자동 Git 훅**: 커밋 전 자동 품질 검사
 - **Conventional Commits**: 표준화된 커밋 메시지
 
 ### ✅ 배포 자동화
+
 - **의존성 기반 빌드**: 변경사항에 따른 선택적 배포
 - **통합 CI/CD**: GitHub Actions로 완전 자동화
 - **버전 관리**: Changesets으로 체계적인 릴리스
@@ -101,7 +104,7 @@ git commit -m "feat(api): add user authentication endpoint"
 
 # 3. Pre-commit 훅이 자동으로 실행
 #    - 코드 포맷팅 검사
-#    - 린트 검사  
+#    - 린트 검사
 #    - 타입 검사
 
 # 4. 푸시
@@ -109,6 +112,7 @@ git push origin feature-branch
 ```
 
 #### 커밋 메시지 형식
+
 ```
 type(scope): description
 
@@ -117,7 +121,7 @@ type(scope): description
 
 예시:
 feat(api): add user authentication endpoint
-fix(client): resolve navigation bug  
+fix(client): resolve navigation bug
 docs: update README with monorepo setup
 chore(ci): update GitHub Actions workflow
 ```
@@ -151,6 +155,7 @@ git push origin main
 ### 🔧 개발 패턴
 
 #### 새로운 패키지 추가
+
 ```bash
 # 1. 패키지 디렉토리 생성
 mkdir packages/new-package
@@ -171,6 +176,7 @@ echo "  - 'packages/new-package'" >> pnpm-workspace.yaml
 ```
 
 #### 패키지 간 의존성 추가
+
 ```bash
 # shared 패키지를 api에 추가
 pnpm --filter=@routine-quest/api add @routine-quest/shared
@@ -183,36 +189,40 @@ pnpm --filter=@routine-quest/api add fastapi
 ## 🔧 도구별 상세 설정
 
 ### Turborepo
+
 - **파일**: `turbo.json`
 - **캐시**: `.turbo/` (로컬), 원격 캐시 지원
 - **병렬성**: CPU 코어 수에 따라 자동 조정
 - **의존성**: 패키지 간 의존성 기반 실행 순서
 
 ### PNPM 워크스페이스
+
 - **파일**: `pnpm-workspace.yaml`, `package.json`
 - **호이스팅**: 공통 의존성 루트로 끌어올림
 - **링크**: 로컬 패키지 간 심볼릭 링크
 - **효율성**: npm/yarn 대비 3배 빠른 설치
 
 ### Git 훅 (Husky)
+
 - **Pre-commit**: 코드 품질 자동 검사
 - **Commit-msg**: Conventional Commits 형식 검증
 - **설정**: `.husky/` 디렉토리
 
 ### CI/CD (GitHub Actions)
+
 - **PR 검사**: 린트, 테스트, 빌드 검증
 - **릴리스**: main 브랜치 푸시 시 자동 릴리스
 - **Docker**: 변경사항 기반 컨테이너 빌드
 
 ## 📊 성능 비교
 
-| 항목 | 기존 방식 | 모노레포 |
-|------|----------|----------|
-| 개발 서버 시작 | 3개 터미널 필요 | 1개 명령어 |
-| 전체 빌드 시간 | ~5분 | ~2분 (캐시 활용) |
-| 테스트 실행 | 순차 실행 | 병렬 실행 |
-| 의존성 설치 | 3번 실행 | 1번 실행 |
-| 코드 품질 검사 | 수동 | 자동 (Git 훅) |
+| 항목           | 기존 방식       | 모노레포         |
+| -------------- | --------------- | ---------------- |
+| 개발 서버 시작 | 3개 터미널 필요 | 1개 명령어       |
+| 전체 빌드 시간 | ~5분            | ~2분 (캐시 활용) |
+| 테스트 실행    | 순차 실행       | 병렬 실행        |
+| 의존성 설치    | 3번 실행        | 1번 실행         |
+| 코드 품질 검사 | 수동            | 자동 (Git 훅)    |
 
 ## 🔍 문제 해결
 
@@ -258,4 +268,5 @@ export TURBO_TEAM=your-team
 
 **🎉 축하합니다! Routine Quest App이 최신 모노레포로 업그레이드되었습니다.**
 
-더 자세한 정보는 각 패키지의 README.md를 참고하거나, [Turborepo 공식 문서](https://turbo.build/repo/docs)를 확인하세요.
+더 자세한 정보는 각 패키지의 README.md를 참고하거나,
+[Turborepo 공식 문서](https://turbo.build/repo/docs)를 확인하세요.

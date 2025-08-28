@@ -5,7 +5,8 @@ Configure monorepo project structure
 ## Instructions
 
 1. **Monorepo Tool Analysis**
-   - Parse monorepo tool from arguments: `$ARGUMENTS` (nx, lerna, rush, yarn-workspaces, pnpm-workspaces, turborepo)
+   - Parse monorepo tool from arguments: `$ARGUMENTS` (nx, lerna, rush, yarn-workspaces,
+     pnpm-workspaces, turborepo)
    - If no tool specified, analyze project structure and recommend best tool based on:
      - Project size and complexity
      - Existing package manager

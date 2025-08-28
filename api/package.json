@@ -9,7 +9,7 @@
     "start": "gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000",
     "test": "pytest -v",
     "test:unit": "pytest tests/unit -v",
-    "test:integration": "pytest tests/integration -v", 
+    "test:integration": "pytest tests/integration -v",
     "test:coverage": "pytest --cov=app --cov-report=html --cov-report=term",
     "lint": "ruff check app tests",
     "lint:fix": "ruff check app tests --fix",

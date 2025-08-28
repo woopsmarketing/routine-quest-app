@@ -1,6 +1,6 @@
 {
   "name": "@routine-quest/ai",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "private": true,
   "description": "AI microservice for Routine Quest App",
   "main": "app/main.py",
@@ -12,7 +12,7 @@
     "test:integration": "pytest tests/integration -v",
     "test:coverage": "pytest --cov=app --cov-report=html --cov-report=term",
     "lint": "ruff check app tests",
-    "lint:fix": "ruff check app tests --fix", 
+    "lint:fix": "ruff check app tests --fix",
     "format": "black app tests",
     "format:check": "black app tests --check",
     "type-check": "mypy app",
@@ -28,7 +28,7 @@
   ],
   "keywords": [
     "ai",
-    "python", 
+    "python",
     "langchain",
     "openai",
     "anthropic",

@@ -5,8 +5,9 @@
 ## 📋 설정 체크리스트
 
 ### ✅ **필수 사전 설치**
+
 - [ ] **Node.js** (v18+) - [nodejs.org](https://nodejs.org)
-- [ ] **Python** (3.11+) - [python.org](https://python.org)  
+- [ ] **Python** (3.11+) - [python.org](https://python.org)
 - [ ] **Flutter SDK** (3.16.0+) - [flutter.dev](https://flutter.dev)
 - [ ] **Git** - [git-scm.com](https://git-scm.com)
 - [ ] **GitHub CLI** - [cli.github.com](https://cli.github.com)
@@ -37,6 +38,7 @@ git checkout -b feature/claude-setup origin/feature/claude-setup
 ### **환경 변수 파일 생성 (수동 필요)**
 
 #### **🔐 루트 디렉토리 `.env`**
+
 ```bash
 # 🌍 글로벌 환경 설정
 NODE_ENV=development
@@ -59,6 +61,7 @@ FIREBASE_WEB_API_KEY=your_firebase_web_api_key
 ```
 
 #### **🐍 API 서비스 `api/.env`**
+
 ```bash
 # FastAPI 설정
 APP_NAME=Routine Quest API
@@ -84,6 +87,7 @@ UPLOAD_PATH=/tmp/uploads
 ```
 
 #### **🤖 AI 서비스 `ai/.env`**
+
 ```bash
 # AI 서비스 설정
 SERVICE_NAME=Routine Quest AI
@@ -93,7 +97,7 @@ DEBUG=true
 OPENAI_API_KEY=your_openai_api_key
 ANTHROPIC_API_KEY=your_anthropic_api_key
 
-# 캐시 설정  
+# 캐시 설정
 REDIS_URL=redis://localhost:6379/1
 CACHE_TTL=3600
 
@@ -117,7 +121,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # 🤖 AI 서비스 의존성
-cd ../ai  
+cd ../ai
 pip install -r requirements.txt
 
 # 📱 Flutter 의존성
@@ -133,6 +137,7 @@ cd ..
 ## 🗄️ **4단계: 데이터베이스 설정**
 
 ### **PostgreSQL + Redis (Docker 사용)**
+
 ```bash
 # Docker로 개발용 DB 실행
 cd docker
@@ -150,6 +155,7 @@ docker run -d --name redis-dev \
 ```
 
 ### **데이터베이스 마이그레이션**
+
 ```bash
 cd api
 alembic upgrade head
@@ -160,6 +166,7 @@ alembic upgrade head
 ## 🔥 **5단계: Firebase 설정**
 
 ### **Firebase 프로젝트 설정**
+
 1. [Firebase Console](https://console.firebase.google.com) 접속
 2. 새 프로젝트 생성 또는 기존 프로젝트 선택
 3. **Authentication** 활성화 (Google, 이메일/비밀번호)
@@ -167,6 +174,7 @@ alembic upgrade head
 5. **Web 앱** 추가
 
 ### **설정 파일 생성**
+
 ```bash
 # Flutter Firebase 설정
 cd client
@@ -183,11 +191,13 @@ flutterfire configure
 ## 🛠️ **6단계: 개발 도구 설정**
 
 ### **GitHub CLI 인증**
+
 ```bash
 gh auth login
 ```
 
 ### **바이브코딩 스크립트 권한 설정**
+
 ```bash
 # Linux/Mac
 chmod +x scripts/*.sh
@@ -197,8 +207,9 @@ find scripts -name "*.sh" -exec chmod +x {} \;
 ```
 
 ### **VS Code 확장 프로그램 (권장)**
+
 - **Flutter** - Dart/Flutter 지원
-- **Python** - Python 언어 지원  
+- **Python** - Python 언어 지원
 - **Pylance** - Python 언어 서버
 - **ESLint** - JavaScript/TypeScript 린터
 - **GitLens** - Git 향상 도구
@@ -210,17 +221,19 @@ find scripts -name "*.sh" -exec chmod +x {} \;
 ## 🚀 **7단계: 개발 서버 실행**
 
 ### **전체 스택 실행 (권장)**
+
 ```bash
 # 모든 서비스 한 번에 실행
 pnpm dev
 
 # 개별 서비스 접속 확인
 # - Frontend: http://localhost:3000
-# - API: http://localhost:8000/docs  
+# - API: http://localhost:8000/docs
 # - AI Service: http://localhost:8001
 ```
 
 ### **개별 서비스 실행**
+
 ```bash
 # 백엔드 API만
 pnpm dev --filter=@routine-quest/api
@@ -228,7 +241,7 @@ pnpm dev --filter=@routine-quest/api
 # 프론트엔드만
 pnpm dev --filter=@routine-quest/client
 
-# AI 서비스만  
+# AI 서비스만
 cd ai && python -m uvicorn app.main:app --reload --port 8001
 ```
 
@@ -237,6 +250,7 @@ cd ai && python -m uvicorn app.main:app --reload --port 8001
 ## ✅ **8단계: 설치 검증**
 
 ### **헬스체크 스크립트 실행**
+
 ```bash
 # 전체 환경 검사
 ./scripts/dev.sh --check
@@ -248,6 +262,7 @@ flutter doctor                        # Flutter 환경
 ```
 
 ### **테스트 실행**
+
 ```bash
 # 전체 테스트
 pnpm test
@@ -262,11 +277,12 @@ cd client && flutter test             # Flutter 테스트
 ## 🎯 **바이브코딩 환경 확인**
 
 ### **자동화 스크립트 테스트**
+
 ```bash
 # Cursor AI 스크립트
 ./scripts/cursor-upload.sh --test
 
-# Claude Code 스크립트  
+# Claude Code 스크립트
 ./scripts/claude-upload.sh --test
 
 # CI/CD 워크플로우 확인
@@ -280,27 +296,31 @@ git push origin feature/cursor-setup  # Actions 실행 확인
 ### **일반적인 문제**
 
 #### **PNPM 설치 실패**
+
 ```bash
 npm install -g pnpm@latest
 pnpm --version
 ```
 
 #### **Flutter Doctor 오류**
+
 ```bash
 flutter doctor --verbose
 flutter clean && flutter pub get
 ```
 
 #### **Python 가상환경 문제**
+
 ```bash
 python -m venv .venv --clear
 # Windows
 .venv\Scripts\activate && pip install -r requirements.txt
-# Linux/Mac  
+# Linux/Mac
 source .venv/bin/activate && pip install -r requirements.txt
 ```
 
 #### **데이터베이스 연결 오류**
+
 ```bash
 # Docker 컨테이너 상태 확인
 docker ps -a
@@ -311,6 +331,7 @@ netstat -an | grep 6379  # Redis
 ```
 
 #### **Firebase 설정 오류**
+
 ```bash
 # Firebase CLI 재설치
 npm install -g firebase-tools@latest
@@ -322,6 +343,7 @@ firebase login --reauth
 ## 📁 **중요한 로컬 전용 파일들**
 
 ### **⚠️ Git에 커밋하면 안 되는 파일들**
+
 ```
 .env                     # 환경 변수
 .env.local              # 로컬 환경 변수
@@ -334,6 +356,7 @@ firebase-config.json    # Firebase 실제 설정
 ```
 
 ### **✅ 개발팀과 공유되는 파일들**
+
 ```
 .cursorrules           # Cursor AI 설정
 CLAUDE.md             # Claude Code 규칙
@@ -359,7 +382,7 @@ git checkout feature/claude-setup    # Claude Code 사용 시
 # 3. 자동 업로드
 "업로드해줘"                          # AI에게 명령
 
-# 4. 작업 완료  
+# 4. 작업 완료
 "작업 완료" 또는 "검토 완료"           # PR 자동 생성
 ```
 
