@@ -21,11 +21,16 @@ dependencies:
   # Local Storage
   shared_preferences: ^2.2.2
   flutter_secure_storage: ^9.0.0
+  
+  # HTTP Client
+  http: ^1.1.0
 
   # UI
   flutter_animate: ^4.3.0
   flutter_svg: ^2.0.9
   cached_network_image: ^3.3.0
+  intl: ^0.20.2
+  table_calendar: ^3.2.0
 
 dev_dependencies:
   flutter_test:

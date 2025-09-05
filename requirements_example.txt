@@ -1,0 +1,79 @@
+# Routine Quest App - Complete Dependencies
+# All Python libraries needed for the entire monorepo
+
+# Backend API Service (FastAPI)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+alembic==1.13.1
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Authentication and Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Monitoring and Logging
+sentry-sdk[fastapi]==1.38.0
+
+# Async Processing
+celery==5.3.4
+redis==5.0.1
+
+# Email (Optional)
+emails==0.6.0
+
+# AI Microservice (LangChain + OpenAI)
+langchain==0.0.350
+langchain-openai==0.0.2
+openai>=1.6.1,<2.0.0
+python-dotenv==1.0.0
+
+# Development and Testing Tools
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Package Management
+pip-tools==7.3.0
+
+# Code Quality
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
+
+# Docker and Deployment
+docker==6.1.3
+docker-compose==1.29.2
+
+# Data Analysis (Optional)
+pandas==2.1.4
+numpy==1.25.2
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Web Scraping (Optional)
+requests==2.31.0
+beautifulsoup4==4.12.2
+selenium==4.15.2
+
+# Utilities
+click==8.1.7
+rich==13.7.0
+typer==0.9.0
+
+# Flutter Build Automation
+jinja2==3.1.2
+
+# Additional Dependencies (Optional)
+# firebase-admin (Firebase integration)
+# google-cloud-storage (GCS integration)
+# boto3 (AWS integration)
+# psycopg2-binary (PostgreSQL driver)
+# mysql-connector-python (MySQL driver)

@@ -14,6 +14,33 @@
         "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
         "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"
       }
+    },
+    "context7": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      }
+    },
+    "sequential-thinking": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@smithery-ai/server-sequential-thinking",
+        "--key",
+        "1eceb3d3-6684-4a76-873a-a96c251a7330",
+        "--profile",
+        "complex-rattlesnake-vAgAv1"
+      ]
     }
   }
 }
