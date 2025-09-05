@@ -1,6 +1,6 @@
 # ===================================
-# 🏗️ Monorepo .gitignore
-# Routine Quest App - 다국어 프로젝트
+# 🏗️ Monorepo .gitignore (Minimal)
+# Routine Quest App - 다른 환경에서 바로 실행 가능하도록 최소 제외
 # ===================================
 
 # 🌐 OS generated files
@@ -13,36 +13,21 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# 📦 Node.js & Package Managers
+# 📦 Node.js & Package Managers (빌드 시간 단축을 위해 제외)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.pnpm-debug.log*
-lerna-debug.log*
-.npm
-dev-debug.log
 
-# 🔧 Build outputs & Cache
-dist/
-build/
+# 🔧 Build outputs only (소스는 유지)
+**/build/
 .turbo/
 .next/
 out/
+dist/
 
-# 🧪 Testing & Coverage
-coverage/
-test-results/
-.nyc_output/
-.coverage
-htmlcov/
-.tox/
-.nox/
-.pytest_cache/
-junit.xml
-
-# 🔐 Environment & Secrets
+# 🔐 Environment & Secrets (보안상 제외)
 .env
 .env.local
 .env.development.local
@@ -50,172 +35,52 @@ junit.xml
 .env.production.local
 .env.*.local
 
-# ===================================
-# 📱 Flutter Specific
-# ===================================
-**/ios/Flutter/flutter_assets/
-**/ios/Flutter/flutter_export_environment.sh
-**/ios/Runner.xcworkspace/xcshareddata/
-**/android/app/debug/
-**/android/app/profile/
-**/android/app/release/
-**/android/.gradle/
-**/android/gradle/
-**/android/gradlew
-**/android/gradlew.bat
-**/android/local.properties
-
-# Flutter build
-client/build/
+# 📱 Flutter 자동 생성 파일들만 제외
 client/.flutter-plugins
 client/.flutter-plugins-dependencies
 client/.packages
 client/.dart_tool/
 client/ios/Podfile.lock
 client/ios/Pods/
-client/android/.gradle/
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/android/.gradle/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
 
-# Generated files
-**/*.g.dart
-**/*.freezed.dart
-**/*.gr.dart
-**/*.mocks.dart
-
-# ===================================
-# 🐍 Python Specific  
-# ===================================
+# 🐍 Python 캐시만 제외 (소스는 유지)
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual environments
 venv/
-env/
-ENV/
 .venv/
-.env/
+*.egg-info/
 
-# 🗄️ Database & Migration files
-*.db
-*.sqlite3
-alembic/versions/*.py
-!alembic/versions/.gitkeep
-
-# ===================================
-# 🛠️ Development Tools
-# ===================================
-
-# IDEs & Editors
-.idea
-.vscode
+# 🛠️ 개발 도구 설정 (협업에 방해되는 것들)
+.changeset/
+.claude/
+.cursor/
+.idea/
+.vscode/
 *.swp
 *.swo
-*~
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
-# TypeScript
-*.tsbuildinfo
-
-# ESLint
-.eslintcache
-
-# Prettier  
-.prettierignore
-
-# Turbo
-.turbo
-
-# Docker
-.dockerignore
-
-# ===================================
-# 📁 Logs & Temporary files
-# ===================================
-logs/
+# 📁 로그와 캐시만
 *.log
 .tmp/
 tmp/
-temp/
+.turbo
+.eslintcache
 
-# ===================================
-# 🔧 Service-specific ignores
-# ===================================
-
-# AI Service
-ai/models/
-ai/cache/
-ai/.cache/
-
-# API Service  
-api/static/uploads/
-api/logs/
-
-# Documentation builds
-docs/build/
-docs/_build/
-
-# ===================================
-# 🚢 Production & Deployment
-# ===================================
-.vercel/
-.netlify/
-.firebase/
-.serverless/
-
-# Kubernetes
-*.kubeconfig
-helm-charts/*/charts/
-helm-charts/*/Chart.lock
-
-# ===================================
-# 🎯 Project specific
-# ===================================
-# Firebase config (keep templates, ignore actual configs)
-**/firebase-config.json
-**/google-services.json
-**/GoogleService-Info.plist
-
-# API Keys & Secrets
+# 🔐 민감한 설정 파일만
 **/*-key.json
 **/*-secret.*
 **/*.pem
 **/*.key
-
-# Backup files
-*.backup
-*.bak
-*.old
-
-# Local development overrides
-docker-compose.override.yml
-.env.override
-
-# Analysis & Reports
-analysis/
-reports/
-.analysis_options.yaml.backup
-
-# Task files
-# tasks.json
-# tasks/ 
+**/firebase-config.json
+**/google-services.json
+**/GoogleService-Info.plist 
