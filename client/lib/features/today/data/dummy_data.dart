@@ -11,7 +11,7 @@ class DummyRoutineData {
       type: StepType.habit,
     ),
     const Step(
-      id: '2', 
+      id: '2',
       title: '창문 열고 심호흡',
       description: '창문을 열고 신선한 공기를 마시며\n깊게 5번 심호흡해보세요.',
       estimatedMinutes: 3,
@@ -42,10 +42,10 @@ class DummyRoutineData {
 
   // 현재 진행중인 스텝 인덱스 (정적으로 관리)
   static int currentStepIndex = 0;
-  
+
   // 완료된 스텝 목록
   static final Set<String> completedStepIds = {};
-  
+
   // 다음 스텝 가져오기
   static Step? getNextStep() {
     if (currentStepIndex >= morningRoutineSteps.length) {
@@ -53,7 +53,7 @@ class DummyRoutineData {
     }
     return morningRoutineSteps[currentStepIndex];
   }
-  
+
   // 스텝 완료 처리
   static void completeCurrentStep() {
     if (currentStepIndex < morningRoutineSteps.length) {
@@ -62,35 +62,35 @@ class DummyRoutineData {
       currentStepIndex++;
     }
   }
-  
+
   // 스텝 스킵 처리
   static void skipCurrentStep() {
     if (currentStepIndex < morningRoutineSteps.length) {
       currentStepIndex++;
     }
   }
-  
+
   // 루틴 리셋 (테스트용)
   static void reset() {
     currentStepIndex = 0;
     completedStepIds.clear();
   }
-  
+
   // 진행률 계산
   static double getProgress() {
     return currentStepIndex / morningRoutineSteps.length;
   }
-  
+
   // 완료된 스텝 수
   static int getCompletedCount() {
     return completedStepIds.length;
   }
-  
+
   // 전체 스텝 수
   static int getTotalSteps() {
     return morningRoutineSteps.length;
   }
-  
+
   // 루틴 완료 여부
   static bool isRoutineCompleted() {
     return currentStepIndex >= morningRoutineSteps.length;

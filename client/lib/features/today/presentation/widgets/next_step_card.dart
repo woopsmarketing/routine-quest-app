@@ -132,31 +132,83 @@ class NextStepCard extends ConsumerWidget {
     // XP 계산하여 피드백 표시
     final newXP = ref.read(currentXPProvider);
 
-    // 응원 메시지 배열
+    // 🎨 개선된 응원 메시지 배열 - 더 감정적이고 동기부여가 되는 메시지들
     final encouragementMessages = [
-      '🎉 훌륭해요! 다음 단계로 넘어갑니다!',
-      '🌟 잘했어요! 계속 화이팅!',
-      '💪 멋져요! 다음 스텝도 화이팅!',
-      '✨ 완벽해요! 다음 단계로!',
-      '🏆 대단해요! 계속 이어가세요!',
-      '🎯 좋아요! 다음 스텝으로!',
-      '⭐ 훌륭한 진행이에요!',
-      '🔥 잘하고 있어요! 계속!',
+      '🎊 완벽한 실행이에요! 다음 도전을 향해!',
+      '🚀 놀라운 집중력이네요! 계속 이어가세요!',
+      '💎 정말 멋진 모습이에요! 다음 스텝도 화이팅!',
+      '🌟 환상적인 진행이에요! 당신은 정말 대단해요!',
+      '🎯 완벽한 타이밍이에요! 다음 목표로!',
+      '⚡ 엄청난 에너지네요! 계속 이 기세로!',
+      '🏆 진정한 챔피언이에요! 다음 도전 준비됐나요?',
+      '✨ 마법같은 순간이에요! 계속 이어가세요!',
+      '🔥 불꽃같은 열정이에요! 다음 스텝도 완벽하게!',
+      '💫 별처럼 빛나는 모습이에요! 계속 화이팅!',
+      '🎪 서커스처럼 멋진 실행이에요! 다음은 뭘까요?',
+      '🌈 무지개처럼 아름다운 진행이에요! 계속해요!',
+      '🎭 연기처럼 자연스러운 완성도예요! 대단해요!',
+      '🎨 예술작품 같은 완벽함이에요! 다음 걸작을 위해!',
+      '🎵 음악처럼 리드미컬한 진행이에요! 계속 연주하세요!',
     ];
 
     // 랜덤 응원 메시지 선택
     final randomMessage = encouragementMessages[
         DateTime.now().millisecondsSinceEpoch % encouragementMessages.length];
 
+    // 🎨 개선된 SnackBar - 더 시각적으로 매력적이고 정보가 풍부한 피드백
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$randomMessage +10 XP (총 ${newXP}XP)'),
-        duration: const Duration(milliseconds: 2500),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+        content: Row(
+          children: [
+            // 성공 아이콘
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // 메시지와 XP 정보
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    randomMessage,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '+10 XP 획득! (총 ${newXP}XP)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+        duration: const Duration(milliseconds: 2000), // 빠르게 표시
+        backgroundColor: Colors.grey[900], // 깔끔한 검은색
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16), // 여백 추가
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16), // 더 둥글게
+        ),
+        elevation: 8, // 그림자 효과 강화
       ),
     );
   }

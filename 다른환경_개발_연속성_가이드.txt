@@ -1,0 +1,251 @@
+# 다른 환경에서 Routine Quest App 개발 연속성 가이드
+
+## 🚀 새로운 데스크톱에서 개발 시작하기
+
+### 1단계: 프로젝트 클론 및 기본 설정
+```bash
+# 1. 저장소 클론
+git clone https://github.com/woopsmarketing/routine-quest-app.git
+cd routine-quest-app
+
+# 2. 브랜치 확인 및 최신 상태로 업데이트
+git branch -a
+git pull origin main
+
+# 3. 개발용 브랜치 생성 (선택사항)
+git checkout -b feature/새기능명
+# 또는 기존 작업 브랜치로 체크아웃
+git checkout develop
+```
+
+### 2단계: 개발 환경 자동 설정
+```bash
+# 한 번에 모든 환경 설정 (권장)
+./scripts/setup.sh
+
+# 또는 수동 설정 (필요시):
+# - Node.js (18+), Python (3.9+), Flutter SDK 설치
+# - pnpm install (root)
+# - cd client && flutter pub get
+# - cd api && pip install -r requirements.txt
+# - cd ai && pip install -r requirements.txt
+```
+
+### 3단계: 환경 변수 설정
+```bash
+# 1. .env.example을 복사해서 .env 생성
+cp .env.example .env
+
+# 2. .env 파일 필수 항목 설정:
+# - DATABASE_URL=postgresql://user:pass@localhost:5432/routine_quest
+# - REDIS_URL=redis://localhost:6379
+# - OPENAI_API_KEY=your_key_here (AI 기능 사용시)
+# - FIREBASE_PROJECT_ID=your_project_id (푸시 알림 등)
+```
+
+### 4단계: 로컬 데이터베이스 및 서비스 실행
+```bash
+# 1. Docker로 PostgreSQL, Redis 실행
+cd docker
+docker-compose up -d
+
+# 2. 데이터베이스 마이그레이션
+cd ../api
+alembic upgrade head
+```
+
+### 5단계: 개발 서버 실행
+```bash
+# 루트 디렉토리에서 모든 서비스 동시 실행
+./scripts/dev.sh
+
+# 개별 서비스 실행 (필요시):
+# - 백엔드: cd api && uvicorn app.main:app --reload --port 8000
+# - AI 서비스: cd ai && uvicorn app.main:app --reload --port 8001  
+# - Flutter: cd client && flutter run -d web-server --web-port 3000
+```
+
+## 🔄 개발 작업 연속성 유지
+
+### 작업 시작할 때
+```bash
+# 1. 최신 변경사항 가져오기
+git fetch origin
+git pull origin main  # 또는 develop
+
+# 2. 의존성 업데이트 (package.json/pubspec.yaml 변경된 경우)
+pnpm install
+cd client && flutter pub get
+cd ../api && pip install -r requirements.txt
+
+# 3. 데이터베이스 마이그레이션 확인
+cd api && alembic upgrade head
+
+# 4. 개발 서버 실행
+./scripts/dev.sh
+```
+
+### 작업 마무리할 때
+```bash
+# 1. 변경사항 확인
+git status
+git diff
+
+# 2. 코드 품질 검사
+pnpm lint:fix  # 자동 포맷팅
+pnpm test      # 테스트 실행
+
+# 3. 커밋 및 푸시
+git add .
+git commit -m "feat: 작업 내용 요약"
+git push origin 브랜치명
+```
+
+## 🛠️ 환경별 필수 도구 설치
+
+### Windows 환경
+```powershell
+# Chocolatey 패키지 매니저로 설치 (권장)
+choco install nodejs python flutter git docker-desktop
+npm install -g pnpm
+
+# 또는 수동 설치:
+# - Node.js 18+ (https://nodejs.org)
+# - Python 3.9+ (https://python.org)
+# - Flutter SDK (https://flutter.dev/docs/get-started/install/windows)
+# - Git (https://git-scm.com)
+# - Docker Desktop (https://docker.com/products/docker-desktop)
+```
+
+### macOS 환경
+```bash
+# Homebrew로 설치
+brew install node python@3.9 git
+brew install --cask flutter docker
+
+# pnpm 설치
+npm install -g pnpm
+```
+
+### Linux 환경
+```bash
+# Ubuntu/Debian
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs python3 python3-pip git docker.io docker-compose
+
+# Flutter 설치
+wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.x.x-stable.tar.xz
+tar xf flutter_linux_*-stable.tar.xz
+export PATH="$PATH:`pwd`/flutter/bin"
+
+# pnpm 설치
+npm install -g pnpm
+```
+
+## 📱 각 플랫폼별 개발 설정
+
+### Flutter 모바일 개발 (Android/iOS)
+```bash
+# Android 개발
+# - Android Studio 설치
+# - Android SDK, Android SDK Command-line Tools 설치
+# - 가상 디바이스 생성 또는 실제 기기 연결
+
+# iOS 개발 (macOS만)
+# - Xcode 설치 (App Store)
+# - iOS Simulator 설정
+# - CocoaPods 설치: sudo gem install cocoapods
+
+# 설정 확인
+flutter doctor -v
+```
+
+### 데이터베이스 개발
+```bash
+# PostgreSQL 클라이언트 도구 (선택사항)
+# - pgAdmin (GUI): https://www.pgadmin.org
+# - DBeaver (Universal): https://dbeaver.io
+# - VS Code 확장: PostgreSQL
+
+# 연결 정보 (docker-compose.yml 참조)
+# Host: localhost
+# Port: 5432
+# Database: routine_quest
+# Username: postgres
+# Password: password
+```
+
+## 🔧 트러블슈팅
+
+### 자주 발생하는 문제들
+```bash
+# 1. Port 충돌 오류
+# 해결: 다른 프로세스 종료 또는 포트 변경
+lsof -ti:8000 | xargs kill -9  # 8000 포트 프로세스 종료
+
+# 2. 의존성 설치 실패
+# 해결: 캐시 정리 후 재설치
+pnpm cache clean
+rm -rf node_modules client/pubspec.lock
+pnpm install && cd client && flutter pub get
+
+# 3. 데이터베이스 연결 오류  
+# 해결: Docker 서비스 재시작
+cd docker && docker-compose down && docker-compose up -d
+
+# 4. Flutter 빌드 오류
+# 해결: 캐시 정리 및 재빌드
+cd client
+flutter clean
+flutter pub get
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+### 성능 최적화 팁
+```bash
+# 1. 빌드 시간 단축
+# - Turbo 캐시 활용: pnpm turbo build --cache-dir=.turbo
+# - 병렬 실행: pnpm dev (모든 서비스 동시 실행)
+
+# 2. 개발 효율성
+# - Hot Reload: Flutter 웹 개발시 자동 새로고침
+# - Watch Mode: API 개발시 uvicorn --reload 사용
+# - 코드 생성: flutter pub run build_runner watch (실시간 생성)
+```
+
+## 📋 개발 워크플로우 체크리스트
+
+### 새 환경 설정시 (최초 1회)
+- [ ] 필수 도구 설치 (Node.js, Python, Flutter, Docker)
+- [ ] 저장소 클론 및 브랜치 확인
+- [ ] ./scripts/setup.sh 실행
+- [ ] .env 파일 생성 및 설정
+- [ ] 로컬 서비스 실행 확인 (localhost:8000, :8001, :3000)
+- [ ] flutter doctor -v 통과 확인
+
+### 일상적인 개발 시작시
+- [ ] git pull로 최신 변경사항 동기화
+- [ ] 의존성 업데이트 확인 (필요시)
+- [ ] 로컬 서비스 실행 (./scripts/dev.sh)
+- [ ] 개발 도구 준비 (VS Code, Android Studio 등)
+
+### 작업 완료시
+- [ ] 코드 품질 검사 (lint, test)
+- [ ] 변경사항 커밋 및 푸시
+- [ ] CI/CD 파이프라인 통과 확인
+
+## 🌐 유용한 URL 모음
+
+개발시 자주 사용하는 URL들:
+- 백엔드 API: http://localhost:8000/docs (Swagger UI)
+- AI 서비스: http://localhost:8001/docs  
+- Flutter 웹: http://localhost:3000
+- PostgreSQL: localhost:5432 (pgAdmin 등으로 접속)
+- Redis: localhost:6379
+
+GitHub 저장소: https://github.com/woopsmarketing/routine-quest-app
+프로젝트 문서: README.md, CLAUDE.md 참조
+
+---
+📝 이 가이드는 Routine Quest App의 개발 연속성을 보장하기 위해 작성되었습니다.
+새로운 환경에서 문제 발생시 CLAUDE.md 파일도 함께 참조하세요.

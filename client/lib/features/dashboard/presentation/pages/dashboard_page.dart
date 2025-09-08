@@ -19,11 +19,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // 임시 RPG 데이터
-  int _currentLevel = 12;
-  int _currentExp = 2850;
-  int _expToNextLevel = 3200;
-  String _userTitle = "루틴 마스터";
+  // RPG 데이터 (실제 데이터로 동기화됨)
+  int _currentLevel = 1;
+  int _currentExp = 0;
+  String _userTitle = "루틴 초보자";
 
   // 오늘의 통계
   int _todayExp = 270;
@@ -113,36 +112,58 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Future<void> _loadUserStats() async {
     try {
-      // SharedPreferences에서 사용자 통계 불러오기
-      final prefs = await SharedPreferences.getInstance();
-      final level = prefs.getInt('user_level') ?? 1;
-      final exp = prefs.getInt('user_exp') ?? 0;
-      final title = prefs.getString('user_title') ?? '루틴 초보자';
-
-      // 오늘의 통계 불러오기
+      // UserProgressService에서 실제 데이터 가져오기
+      final userStats = await UserProgressService.getUserStats();
       final todayStats = await UserProgressService.getTodayStats();
+      final streakDays = await UserProgressService.getStreakDays();
 
       setState(() {
-        _currentLevel = level;
-        _currentExp = exp;
-        _userTitle = title;
-        _expToNextLevel = _calculateExpToNextLevel(level);
+        _currentLevel = userStats['level'] as int;
+        _currentExp = userStats['exp'] as int;
+        // 실제 레벨에 따른 칭호로 동기화
+        _userTitle = _getLevelTitle(_currentLevel);
 
         // 오늘의 통계 업데이트
         _todayExp = todayStats['todayExp'] ?? 0;
-        _streakDays = 7; // 임시값, 실제로는 getStreakDays() 사용
+        _streakDays = streakDays; // 실제 연속 일수
         _completionRate = todayStats['completionRate'] ?? 0;
         _totalTimeSeconds = todayStats['totalTimeSeconds'] ?? 0;
       });
     } catch (e) {
+      print('대시보드 사용자 통계 로드 오류: $e');
       // 에러 시 기본값 유지
     }
   }
 
-  int _calculateExpToNextLevel(int level) {
-    // 레벨별 필요 경험치 계산
-    return level * 200 + 800; // 예: Lv.1 = 1000, Lv.2 = 1200, Lv.3 = 1400...
+  // 레벨에 따른 칭호 가져오기 (UserStatsModel과 동일한 로직)
+  String _getLevelTitle(int level) {
+    switch (level) {
+      case 1:
+        return '루틴 초보자';
+      case 2:
+        return '루틴 적응자';
+      case 3:
+        return '루틴 실천자';
+      case 4:
+        return '루틴 마스터';
+      case 5:
+        return '루틴 달인';
+      case 6:
+        return '루틴 전문가';
+      case 7:
+        return '루틴 고수';
+      case 8:
+        return '루틴 전설';
+      case 9:
+        return '루틴 제왕';
+      case 10:
+        return '루틴 신';
+      default:
+        return '루틴 초보자';
+    }
   }
+
+  // 더 이상 사용하지 않음 - 1000 XP당 레벨업으로 통일
 
   // 초를 분:초 형식으로 포맷
   String _formatTime(int totalSeconds) {
@@ -199,8 +220,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   // RPG 프로필 섹션
   Widget _buildRPGProfile() {
-    final expProgress = _currentExp / _expToNextLevel;
-    final expRemaining = _expToNextLevel - _currentExp;
+    final currentLevelExp = _currentExp % 1000;
+    final expProgress = currentLevelExp / 1000;
+    final expRemaining = 1000 - currentLevelExp;
 
     return Container(
       width: double.infinity,
@@ -293,7 +315,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'EXP $_currentExp / $_expToNextLevel',
+                              'EXP ${_currentExp % 1000} / 1000',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white70,

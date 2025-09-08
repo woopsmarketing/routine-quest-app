@@ -9,18 +9,21 @@ class UserProgressService {
   static const String _userTitleKey = 'user_title';
   static const String _routineHistoryKey = 'routine_history';
 
-  // 레벨별 타이틀 정의
+  // 레벨별 타이틀 정의 (10단계 시스템)
   static const Map<int, String> _levelTitles = {
     1: '루틴 초보자',
-    5: '루틴 학습자',
-    10: '루틴 실행자',
-    15: '루틴 전문가',
-    20: '루틴 마스터',
-    30: '라이프스타일 구루',
-    50: '루틴의 신',
+    2: '루틴 실천자',
+    3: '루틴 학습자',
+    4: '루틴 실행자',
+    5: '루틴 전문가',
+    6: '루틴 마스터',
+    7: '루틴 구루',
+    8: '루틴 전설',
+    9: '루틴 제왕',
+    10: '루틴의 신',
   };
 
-  // 경험치 획득 및 레벨업 처리
+  // 경험치 획득 및 레벨업 처리 (1000 XP당 레벨업)
   static Future<Map<String, dynamic>> addExperience(int exp) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -28,17 +31,13 @@ class UserProgressService {
     final currentExp = prefs.getInt(_userExpKey) ?? 0;
 
     final newExp = currentExp + exp;
-    final expForNextLevel = _calculateExpForLevel(currentLevel + 1);
 
-    int newLevel = currentLevel;
-    bool leveledUp = false;
+    // 1000 XP당 레벨업 (최대 10레벨)
+    final newLevel = _calculateLevelFromExperience(newExp);
+    final leveledUp = newLevel > currentLevel;
 
-    // 레벨업 체크
-    if (newExp >= expForNextLevel) {
-      newLevel = currentLevel + 1;
-      leveledUp = true;
-
-      // 새 타이틀 설정
+    // 레벨업시 새 타이틀 설정
+    if (leveledUp) {
       final newTitle = _getTitleForLevel(newLevel);
       await prefs.setString(_userTitleKey, newTitle);
     }
@@ -52,7 +51,7 @@ class UserProgressService {
       'oldLevel': currentLevel,
       'newLevel': newLevel,
       'currentExp': newExp,
-      'expForNextLevel': _calculateExpForLevel(newLevel + 1),
+      'expForNextLevel': _calculateExpToNextLevel(newLevel, newExp),
       'title': _getTitleForLevel(newLevel),
     };
   }
@@ -120,16 +119,16 @@ class UserProgressService {
   static Future<Map<String, dynamic>> getUserStats() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final level = prefs.getInt(_userLevelKey) ?? 1;
     final exp = prefs.getInt(_userExpKey) ?? 0;
+    final level = _calculateLevelFromExperience(exp);
     final title = prefs.getString(_userTitleKey) ?? _getTitleForLevel(level);
 
     return {
       'level': level,
       'exp': exp,
       'title': title,
-      'expForNextLevel': _calculateExpForLevel(level + 1),
-      'expRemaining': _calculateExpForLevel(level + 1) - exp,
+      'expForNextLevel': _calculateExpToNextLevel(level, exp),
+      'expRemaining': _calculateExpToNextLevel(level, exp),
     };
   }
 
@@ -203,9 +202,17 @@ class UserProgressService {
     return streak;
   }
 
-  // 레벨별 필요 경험치 계산
-  static int _calculateExpForLevel(int level) {
-    return level * 200 + 800; // Lv.1=1000, Lv.2=1200, Lv.3=1400...
+  // 경험치로부터 레벨 계산 (1000 XP당 레벨업, 최대 10레벨)
+  static int _calculateLevelFromExperience(int totalExp) {
+    if (totalExp < 1000) return 1;
+    final level = (totalExp / 1000).floor() + 1;
+    return level > 10 ? 10 : level; // 최대 10레벨
+  }
+
+  // 다음 레벨까지 필요한 경험치 계산
+  static int _calculateExpToNextLevel(int currentLevel, int currentExp) {
+    if (currentLevel >= 10) return 0; // 최대 레벨
+    return 1000 - (currentExp % 1000);
   }
 
   // 레벨에 맞는 타이틀 반환

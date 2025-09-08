@@ -3,8 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/providers/routine_state_provider.dart';
+import '../../data/providers/routine_completion_provider.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
 import '../../../routine/data/providers/routine_list_provider.dart';
+import '../../../../shared/services/user_progress_service.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
@@ -16,13 +18,124 @@ class TodayPage extends ConsumerStatefulWidget {
 class _TodayPageState extends ConsumerState<TodayPage> {
   int _currentElapsedSeconds = 0; // 현재 스텝의 경과 시간 저장
 
+  // 사용자 통계 데이터
+  int _todayExp = 0;
+  int _streakDays = 0;
+  int _completionRate = 0;
+
   @override
   void initState() {
     super.initState();
     // 루틴 목록 로드
+    _loadUserStats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(routineListProvider.notifier).loadRoutines();
     });
+  }
+
+  // 사용자 통계 로드
+  Future<void> _loadUserStats() async {
+    try {
+      final todayStats = await UserProgressService.getTodayStats();
+      final streakDays = await UserProgressService.getStreakDays();
+
+      setState(() {
+        _todayExp = todayStats['todayExp'] ?? 0;
+        _streakDays = streakDays;
+        _completionRate = todayStats['completionRate'] ?? 0;
+      });
+    } catch (e) {
+      print('Today 페이지 사용자 통계 로드 오류: $e');
+    }
+  }
+
+  // 오늘의 통계 섹션 빌드
+  Widget _buildTodayStatsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.purple.shade100,
+            Colors.purple.shade50,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '오늘의 성과',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple.shade800,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildTodayStatItem(
+                '오늘 EXP',
+                '+$_todayExp',
+                Icons.star,
+                Colors.amber,
+              ),
+              _buildTodayStatItem(
+                '연속 일수',
+                '${_streakDays}일',
+                Icons.local_fire_department,
+                Colors.orange,
+              ),
+              _buildTodayStatItem(
+                '완료율',
+                '${_completionRate}%',
+                Icons.check_circle,
+                Colors.green,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 오늘 통계 아이템 빌드
+  Widget _buildTodayStatItem(
+      String title, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: color,
+          size: 24,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+        ),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade600,
+              ),
+        ),
+      ],
+    );
   }
 
   // 📊 오늘의 진행 상황 계산 (전역 상태 사용)
@@ -84,6 +197,13 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     ref.read(routineProgressProvider.notifier).resetRoutine();
   }
 
+  // 🎯 루틴 완료 처리 (로컬 스토리지에 저장)
+  void _markRoutineAsCompleted(String routineId) {
+    ref
+        .read(routineCompletionProvider.notifier)
+        .markRoutineAsCompleted(routineId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final routineState = ref.watch(routineListProvider);
@@ -97,6 +217,35 @@ class _TodayPageState extends ConsumerState<TodayPage> {
             icon: const Icon(Icons.refresh),
             onPressed: () =>
                 ref.read(routineListProvider.notifier).loadRoutines(),
+          ),
+          // 🧪 테스트용: 완료 상태 초기화 버튼
+          IconButton(
+            icon: const Icon(Icons.clear_all),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('완료 상태 초기화'),
+                  content: const Text('오늘 완료된 모든 루틴 상태를 초기화하시겠습니까?\n(테스트용 기능)'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('취소'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ref
+                            .read(routineCompletionProvider.notifier)
+                            .clearTodayCompletions();
+                        CustomSnackbar.showInfo(context, '완료 상태가 초기화되었습니다');
+                      },
+                      child: const Text('초기화'),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -155,6 +304,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 📊 오늘의 통계 섹션
+          _buildTodayStatsSection(),
+          const SizedBox(height: 24),
+
           // 📅 오늘 날짜 표시
           Text(
             '오늘은 ${DateTime.now().month}월 ${DateTime.now().day}일입니다',
@@ -225,6 +378,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
   Widget _buildTodayRoutineCard(
       BuildContext context, Map<String, dynamic> routine) {
     final steps = routine['steps'] as List<dynamic>? ?? [];
+    final routineId = routine['id']?.toString() ?? '';
+
+    // 🎯 루틴 완료 상태 확인
+    final isCompleted = ref.watch(isRoutineCompletedProvider(routineId));
 
     // 🎨 색상 파싱 (안전하게 처리)
     Color color;
@@ -238,124 +395,184 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     }
 
     return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 루틴 헤더
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: color.withOpacity(0.2),
-                  child: Text(
-                    routine['icon'] ?? '🎯',
-                    style: const TextStyle(fontSize: 20),
-                  ),
+      elevation: isCompleted ? 2 : 4,
+      color: isCompleted ? Colors.green.withOpacity(0.05) : null,
+      child: Container(
+        decoration: isCompleted
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.3),
+                  width: 2,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        routine['title'] ?? '루틴',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      if (routine['description'] != null &&
-                          routine['description'].toString().isNotEmpty)
-                        Text(
-                          routine['description'],
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                // 시작 버튼
-                ElevatedButton.icon(
-                  onPressed: () => _startSpecificRoutine(routine),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('시작'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // 스텝 요약 표시
-            if (steps.isNotEmpty) ...[
-              Text(
-                '총 ${steps.length}개 스텝',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // 처음 3개 스텝 미리보기
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
+              )
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 루틴 헤더
+              Row(
                 children: [
-                  ...steps.take(3).map((step) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: color.withOpacity(0.3)),
+                  CircleAvatar(
+                    backgroundColor: color.withOpacity(0.2),
+                    child: Text(
+                      routine['icon'] ?? '🎯',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          routine['title'] ?? '루틴',
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        child: Text(
-                          step['title'] ?? '스텝',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: color,
-                            fontWeight: FontWeight.w500,
+                        if (routine['description'] != null &&
+                            routine['description'].toString().isNotEmpty)
+                          Text(
+                            routine['description'],
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                      )),
-                  if (steps.length > 3)
+                      ],
+                    ),
+                  ),
+                  // 시작 버튼 또는 완료 표시
+                  if (isCompleted)
+                    // ✅ 완료 표시
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        '+${steps.length - 3}개',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            '완료',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    // ▶️ 시작 버튼
+                    ElevatedButton.icon(
+                      onPressed: () => _startSpecificRoutine(routine),
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text('시작'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        foregroundColor: Colors.white,
                       ),
                     ),
                 ],
               ),
-            ] else ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+
+              const SizedBox(height: 16),
+
+              // 스텝 요약 표시
+              if (steps.isNotEmpty) ...[
+                Text(
+                  '총 ${steps.length}개 스텝',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
                 ),
-                child: const Text(
-                  '스텝이 없습니다',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                const SizedBox(height: 8),
+
+                // 처음 3개 스텝 미리보기
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    ...steps.take(3).map((step) => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? Colors.green.withOpacity(0.1)
+                                : color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: isCompleted
+                                    ? Colors.green.withOpacity(0.3)
+                                    : color.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isCompleted)
+                                const Icon(
+                                  Icons.check_circle,
+                                  size: 12,
+                                  color: Colors.green,
+                                ),
+                              if (isCompleted) const SizedBox(width: 4),
+                              Text(
+                                step['title'] ?? '스텝',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isCompleted ? Colors.green : color,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                    if (steps.length > 3)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '+${steps.length - 3}개',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
+              ] else ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '스텝이 없습니다',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -621,16 +838,23 @@ class _TodayPageState extends ConsumerState<TodayPage> {
   // 🎉 스텝 완료/건너뛰기 안내 메시지 오버레이 표시
   void _showStepCompletionPopup(
       bool isCompleted, String stepTitle, int elapsedSeconds) {
-    // 응원/위로 메시지 배열 (next_step_card.dart에서 가져옴)
+    // 🎨 개선된 응원 메시지 배열 - 애니메이션 오버레이용 더 임팩트 있는 메시지들
     final encouragementMessages = [
-      '🎉 훌륭해요! 다음 단계로 넘어갑니다!',
-      '🌟 잘했어요! 계속 화이팅!',
-      '💪 멋져요! 다음 스텝도 화이팅!',
-      '✨ 완벽해요! 다음 단계로!',
-      '🏆 대단해요! 계속 이어가세요!',
-      '🎯 좋아요! 다음 스텝으로!',
-      '⭐ 훌륭한 진행이에요!',
-      '🔥 잘하고 있어요! 계속!',
+      '🎊 완벽한 실행이에요!\n다음 도전을 향해!',
+      '🚀 놀라운 집중력이네요!\n계속 이어가세요!',
+      '💎 정말 멋진 모습이에요!\n다음 스텝도 화이팅!',
+      '🌟 환상적인 진행이에요!\n당신은 정말 대단해요!',
+      '🎯 완벽한 타이밍이에요!\n다음 목표로!',
+      '⚡ 엄청난 에너지네요!\n계속 이 기세로!',
+      '🏆 진정한 챔피언이에요!\n다음 도전 준비됐나요?',
+      '✨ 마법같은 순간이에요!\n계속 이어가세요!',
+      '🔥 불꽃같은 열정이에요!\n다음 스텝도 완벽하게!',
+      '💫 별처럼 빛나는 모습이에요!\n계속 화이팅!',
+      '🎪 서커스처럼 멋진 실행이에요!\n다음은 뭘까요?',
+      '🌈 무지개처럼 아름다운 진행이에요!\n계속해요!',
+      '🎭 연기처럼 자연스러운 완성도예요!\n대단해요!',
+      '🎨 예술작품 같은 완벽함이에요!\n다음 걸작을 위해!',
+      '🎵 음악처럼 리드미컬한 진행이에요!\n계속 연주하세요!',
     ];
 
     final skipMessages = [
@@ -676,8 +900,8 @@ class _TodayPageState extends ConsumerState<TodayPage> {
         stepTitle: stepTitle,
         elapsedSeconds: elapsedSeconds,
         onComplete: () {
-          // 2초 후 오버레이 제거
-          Future.delayed(const Duration(milliseconds: 2000), () {
+          // ⚡ 1.5초 후 빠른 오버레이 제거 - 반짝이듯이!
+          Future.delayed(const Duration(milliseconds: 1500), () {
             overlay.remove();
           });
         },
@@ -692,6 +916,12 @@ class _TodayPageState extends ConsumerState<TodayPage> {
   void _checkRoutineCompletion() {
     final progressState = ref.read(routineProgressProvider);
     if (progressState.isCompleted) {
+      // 루틴 완료 상태를 로컬 스토리지에 저장
+      final routineId = progressState.currentRoutine?['id']?.toString();
+      if (routineId != null) {
+        _markRoutineAsCompleted(routineId);
+      }
+
       // 완료 위젯을 다이얼로그로 표시
       _showCompletionDialog(progressState);
     }
@@ -1022,21 +1252,21 @@ class _StepCompletionOverlayState extends State<_StepCompletionOverlay>
   void initState() {
     super.initState();
 
-    // 페이드 애니메이션 (2초)
+    // ⚡ 빠른 페이드 애니메이션 (1.5초로 단축 - 반짝이듯이!)
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    // 스케일 애니메이션 (0.5초)
+    // ⚡ 빠른 스케일 애니메이션 (0.3초로 단축)
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
-    // 폭죽 애니메이션 (완료 시에만)
+    // ⚡ 빠른 폭죽 애니메이션 (0.8초로 단축)
     _celebrationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -1045,15 +1275,15 @@ class _StepCompletionOverlayState extends State<_StepCompletionOverlay>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _fadeController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeOut, // 더 빠르고 반짝이듯이
     ));
 
     _scaleAnimation = Tween<double>(
-      begin: 0.5,
+      begin: 0.3, // 더 작게 시작해서 더 임팩트 있게
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _scaleController,
-      curve: Curves.elasticOut,
+      curve: Curves.elasticOut, // 탄성 효과로 반짝이듯이
     ));
 
     _celebrationAnimation = Tween<double>(
@@ -1061,7 +1291,7 @@ class _StepCompletionOverlayState extends State<_StepCompletionOverlay>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _celebrationController,
-      curve: Curves.easeOut,
+      curve: Curves.bounceOut, // 바운스 효과로 더 반짝이듯이
     ));
 
     // 애니메이션 시작
@@ -1069,19 +1299,19 @@ class _StepCompletionOverlayState extends State<_StepCompletionOverlay>
   }
 
   void _startAnimations() {
-    // 페이드 인 (0.3초)
+    // ⚡ 빠른 페이드 인 (0.2초)
     _fadeController.forward();
 
-    // 스케일 애니메이션 (0.5초)
+    // ⚡ 빠른 스케일 애니메이션 (0.3초)
     _scaleController.forward();
 
-    // 완료 시 폭죽 애니메이션 (1.2초)
+    // ⚡ 빠른 폭죽 애니메이션 (0.8초)
     if (widget.isCompleted) {
       _celebrationController.forward();
     }
 
-    // 2초 후 페이드 아웃 시작 (점점 투명해지면서)
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    // ⚡ 1.5초 후 빠른 페이드 아웃 - 반짝이듯이 나타나고 사라지기
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         _fadeController.reverse().then((_) {
           widget.onComplete();
@@ -1183,49 +1413,111 @@ class _StepCompletionOverlayState extends State<_StepCompletionOverlay>
 
                     const SizedBox(height: 16),
 
-                    // 메인 메시지 - 더 큰 폰트와 그림자 효과
-                    Text(
-                      widget.message,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: widget.isCompleted
-                            ? Colors.green[700]
-                            : Colors.orange[700],
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
+                    // 🎨 개선된 메인 메시지 - 더 임팩트 있고 시각적으로 매력적인 디자인
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // 깔끔한 흰색 배경
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.grey[300]!, // 연한 회색 테두리
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15), // 검은색 그림자
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                            spreadRadius: 2, // 그림자 확산 효과
                           ),
                         ],
                       ),
-                      textAlign: TextAlign.center,
+                      child: Text(
+                        widget.message,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800], // 깔끔한 진한 회색
+                          height: 1.3, // 줄 간격 조정
+                          shadows: [
+                            Shadow(
+                              color:
+                                  Colors.black.withOpacity(0.1), // 미묘한 검은색 그림자
+                              offset: const Offset(0, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                    // 스텝 제목 - 작은 폰트로
-                    Text(
-                      widget.stepTitle,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+                    // 🎨 개선된 스텝 정보 표시 - 더 깔끔하고 정보가 풍부한 디자인
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // 소요시간 - 가장 작은 폰트로
-                    Text(
-                      '소요시간: ${_formatTime(widget.elapsedSeconds)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[500],
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50], // 더 밝은 회색 배경
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.grey[200]!, // 더 연한 회색 테두리
+                          width: 1,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
+                      child: Column(
+                        children: [
+                          // 스텝 제목
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.task_alt,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                widget.stepTitle,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // 소요시간
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 14,
+                                color: Colors.grey[500],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '소요시간: ${_formatTime(widget.elapsedSeconds)}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

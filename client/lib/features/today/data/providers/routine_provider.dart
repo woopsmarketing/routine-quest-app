@@ -7,19 +7,19 @@ import '../../domain/models/step.dart';
 // 현재 스텝 프로바이더 (StateNotifier 방식)
 class CurrentStepNotifier extends StateNotifier<Step?> {
   CurrentStepNotifier() : super(DummyRoutineData.getNextStep());
-  
+
   // 스텝 완료
   void complete() {
     DummyRoutineData.completeCurrentStep();
     state = DummyRoutineData.getNextStep();
   }
-  
+
   // 스텝 스킵
   void skip() {
     DummyRoutineData.skipCurrentStep();
     state = DummyRoutineData.getNextStep();
   }
-  
+
   // 루틴 리셋 (테스트용)
   void reset() {
     DummyRoutineData.reset();
