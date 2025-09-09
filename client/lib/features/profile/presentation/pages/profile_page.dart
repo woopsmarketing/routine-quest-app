@@ -12,22 +12,6 @@ import '../../services/dashboard_data_service.dart';
 import '../../services/notification_settings_service.dart';
 import '../../services/unified_notification_service.dart';
 
-// 더미 사용자 데이터
-class DummyUserData {
-  static const String name = '김루틴';
-  static const String email = 'routine@example.com';
-  static const String emoji = '👨‍💻';
-  static const String bio = '루틴을 통해 더 나은 나를 만들어가고 있어요!';
-  static const String gender = '남성';
-  static const String age = '28';
-  static const String goal = '건강한 생활 습관 만들기';
-  static const List<String> interests = ['운동', '독서'];
-  static const int totalRoutines = 4;
-  static const int completedToday = 3;
-  static const int streakDays = 7;
-  static const int totalCompleted = 45;
-}
-
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 

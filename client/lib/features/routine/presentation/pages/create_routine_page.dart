@@ -469,6 +469,7 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
         'icon': _selectedIcon,
         'color': _selectedColor,
         'is_public': _isPublic,
+        'today_display': true, // 새로 만든 루틴은 기본적으로 오늘 노출 활성화
         'steps': [], // 스텝은 나중에 추가
       };
 

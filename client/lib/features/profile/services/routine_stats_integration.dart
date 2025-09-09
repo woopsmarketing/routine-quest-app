@@ -98,8 +98,8 @@ class RoutineStatsIntegration {
   // 실제 루틴 데이터에서 통계 계산 (예시)
   static Future<Map<String, dynamic>> calculateStatsFromRoutines() async {
     try {
-      // TODO: 실제 루틴 데이터베이스에서 데이터 가져오기
-      // 예시 데이터
+      // 실제 루틴 데이터베이스에서 데이터 가져오기 (구현 예정)
+      // 임시 예시 데이터
       final routineData = {
         'totalRoutines': 5,
         'totalSteps': 127,

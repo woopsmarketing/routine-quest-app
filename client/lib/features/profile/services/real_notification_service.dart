@@ -127,7 +127,7 @@ class RealNotificationService {
   // 알림 탭 이벤트 처리
   static void _onNotificationTapped(NotificationResponse response) {
     print('🔔 알림 탭됨: ${response.payload}');
-    // TODO: 알림 탭 시 앱으로 이동하는 로직 구현
+    // 알림 탭 시 앱으로 이동하는 로직 구현 (구현 예정)
   }
 
   // 모든 예약된 알림 취소

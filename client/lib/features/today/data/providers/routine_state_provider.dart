@@ -267,9 +267,16 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
 
       // 루틴 완료 시 경험치 및 기록 저장
       if (isCompleted) {
+        // 백그라운드 타이머 정지
+        BackgroundTimerService().pauseTimer();
         _saveRoutineCompletion().then((exp) {
           state = state.copyWith(expGained: exp);
+          // 완료 후 대시보드 새로고침을 위한 알림
+          print('✅ 루틴 완료! 대시보드 새로고침 필요');
         });
+      } else {
+        // 다음 스텝의 백그라운드 타이머 시작
+        _startBackgroundTimer();
       }
     }
   }
@@ -305,6 +312,20 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
         currentStepStartedAt: isCompleted ? null : DateTime.now(),
         isTimerRunning: !isCompleted,
       );
+
+      // 루틴 완료 시 경험치 및 기록 저장
+      if (isCompleted) {
+        // 백그라운드 타이머 정지
+        BackgroundTimerService().pauseTimer();
+        _saveRoutineCompletion().then((exp) {
+          state = state.copyWith(expGained: exp);
+          // 완료 후 대시보드 새로고침을 위한 알림
+          print('✅ 루틴 완료! 대시보드 새로고침 필요');
+        });
+      } else {
+        // 다음 스텝의 백그라운드 타이머 시작
+        _startBackgroundTimer();
+      }
     }
   }
 
@@ -386,6 +407,9 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
 
     final completedSteps = state.completedSteps.length;
     final totalSteps = state.currentSteps.length;
+    final skippedSteps = state.stepResults
+        .where((result) => result.status == StepStatus.skipped)
+        .length;
     final timeTakenSeconds = state.totalElapsedSeconds;
 
     // 목표 시간 계산 (모든 스텝의 목표 시간 합계)
@@ -414,13 +438,14 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
       // 경험치 추가 및 레벨업 체크
       await UserProgressService.addExperience(expGained);
 
-      // 루틴 완료 기록 저장
+      // 루틴 완료 기록 저장 (건너뛰기한 스텝 정보 포함)
       await UserProgressService.saveRoutineCompletion(
         routineName: routineName,
         completedSteps: completedSteps,
         totalSteps: totalSteps,
         timeTakenSeconds: timeTakenSeconds,
         expGained: expGained,
+        skippedSteps: skippedSteps, // 건너뛰기한 스텝 수 추가
       );
 
       return expGained;

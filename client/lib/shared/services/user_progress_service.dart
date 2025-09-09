@@ -2,6 +2,7 @@
 // RPG 시스템의 경험치, 레벨, 루틴 기록 관리
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../../core/api/api_client.dart';
 
 class UserProgressService {
   static const String _userLevelKey = 'user_level';
@@ -77,13 +78,14 @@ class UserProgressService {
     return todayRecords.any((record) => record['routine'] == routineName);
   }
 
-  // 루틴 완료 기록 저장
+  // 루틴 완료 기록 저장 (건너뛰기한 스텝 정보 포함)
   static Future<void> saveRoutineCompletion({
     required String routineName,
     required int completedSteps,
     required int totalSteps,
     required int timeTakenSeconds,
     required int expGained,
+    int skippedSteps = 0, // 건너뛰기한 스텝 수 추가
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -100,12 +102,13 @@ class UserProgressService {
     final todayRecords =
         List<Map<String, dynamic>>.from(historyData[dateKey] ?? []);
 
-    // 새 기록 추가
+    // 새 기록 추가 (건너뛰기한 스텝 정보 포함)
     todayRecords.add({
       'routine': routineName,
       'exp': expGained,
       'completed_steps': completedSteps,
       'total_steps': totalSteps,
+      'skipped_steps': skippedSteps, // 건너뛰기한 스텝 수 추가
       'time_taken': '${(timeTakenSeconds / 60).round()}분',
       'completed_at': DateTime.now().toIso8601String(),
     });
@@ -132,7 +135,7 @@ class UserProgressService {
     };
   }
 
-  // 오늘의 통계 계산
+  // 오늘의 통계 계산 (전체 루틴 포함, 건너뛰기한 스텝 포함)
   static Future<Map<String, dynamic>> getTodayStats() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -147,33 +150,69 @@ class UserProgressService {
     final todayRecords =
         List<Map<String, dynamic>>.from(historyData[dateKey] ?? []);
 
+    // 실제 API에서 전체 루틴 목록을 가져오기
+    final apiRoutines = await ApiClient.getRoutines();
+    final allRoutines = apiRoutines
+        .map((r) => {
+              'title': r['title'] ?? r['name'] ?? '루틴',
+              'steps': (r['steps'] as List?) ?? [],
+            })
+        .toList();
+
     // 통계 계산
     int totalExp = 0;
     int completedRoutines = todayRecords.length;
     int totalSteps = 0;
     int completedSteps = 0;
+    int skippedSteps = 0; // 건너뛰기한 스텝 수 추가
     int totalTimeSeconds = 0;
+    int totalRoutines = allRoutines.length; // 전체 루틴 수
+    int skippedRoutines = 0; // 건너뛰기한 루틴 수
 
+    // 완료된 루틴들의 통계 계산
     for (final record in todayRecords) {
       totalExp += record['exp'] as int;
       totalSteps += record['total_steps'] as int;
       completedSteps += record['completed_steps'] as int;
+      skippedSteps += record['skipped_steps'] as int? ?? 0; // 건너뛰기한 스텝 수 추가
 
       // 시간 파싱 (예: "25분" -> 1500초)
       final timeStr = record['time_taken'] as String;
       totalTimeSeconds += _parseTimeToSeconds(timeStr);
     }
 
+    // 건너뛰기한 루틴들 계산
+    final completedRoutineNames =
+        todayRecords.map((r) => r['routine'] as String).toSet();
+
+    for (final routine in allRoutines) {
+      final routineTitle = routine['title'] as String;
+      if (!completedRoutineNames.contains(routineTitle)) {
+        // 완료되지 않은 루틴은 건너뛰기한 것으로 간주
+        skippedRoutines++;
+        totalSteps += (routine['steps']?.length ?? 0) as int;
+        skippedSteps += (routine['steps']?.length ?? 0) as int; // 모든 스텝이 건너뛰기됨
+      }
+    }
+
+    // 정확한 완료율 계산: (완료한 스텝 / 전체 스텝) * 100
     final completionRate =
         totalSteps > 0 ? (completedSteps / totalSteps * 100).round() : 0;
 
     return {
       'todayExp': totalExp,
       'completedRoutines': completedRoutines,
+      'totalRoutines': totalRoutines,
+      'skippedRoutines': skippedRoutines,
       'completionRate': completionRate,
+      'totalSteps': totalSteps,
+      'completedSteps': completedSteps,
+      'skippedSteps': skippedSteps, // 건너뛰기한 스텝 수 추가
       'totalTimeSeconds': totalTimeSeconds,
     };
   }
+
+  // (삭제됨) 임시 하드코딩 목록 함수 → 실제 API 사용으로 대체
 
   // 연속 일수 계산
   static Future<int> getStreakDays() async {

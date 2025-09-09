@@ -25,8 +25,8 @@ class ApiClient {
       }
     } catch (e) {
       print('API 오류: $e');
-      // 오류 발생 시 더미 데이터 반환
-      return _getDummyRoutines();
+      // 오류 발생 시 빈 목록 반환
+      return [];
     }
   }
 
@@ -162,114 +162,6 @@ class ApiClient {
       print('API 오류: $e');
       throw Exception('루틴 통계를 가져오는데 실패했습니다');
     }
-  }
-
-  // 🎭 더미 데이터 (API 연결 실패 시 사용)
-  static List<Map<String, dynamic>> _getDummyRoutines() {
-    return [
-      {
-        'id': 1,
-        'title': '생산적인 아침 루틴',
-        'description': '아침에 일어나자마자 하는 루틴',
-        'icon': '🌅',
-        'color': '#6750A4',
-        'is_active': true,
-        'today_display': false, // 기본적으로 숨김
-        'total_completions': 15,
-        'success_rate': 85,
-        'steps': [
-          {
-            'id': 1,
-            'title': '물마시기',
-            'description': '미지근한 물 200ml를 천천히 마셔보세요',
-            'order': 1,
-            'type': 'habit',
-            'difficulty': 'easy',
-            't_ref_sec': 120,
-          },
-          {
-            'id': 2,
-            'title': '기지개',
-            'description': '목, 어깨, 허리를 가볍게 풀어주세요',
-            'order': 2,
-            'type': 'exercise',
-            'difficulty': 'medium',
-            't_ref_sec': 300,
-          },
-          {
-            'id': 3,
-            'title': '줄넘기',
-            'description': '5분간 가벼운 줄넘기',
-            'order': 3,
-            'type': 'exercise',
-            'difficulty': 'medium',
-            't_ref_sec': 300,
-          },
-          {
-            'id': 4,
-            'title': '명상',
-            'description': '5분간 마음의 평정을 찾아보세요',
-            'order': 4,
-            'type': 'habit',
-            'difficulty': 'easy',
-            't_ref_sec': 300,
-          },
-        ]
-      },
-      {
-        'id': 2,
-        'title': '저녁 휴식 루틴',
-        'description': '휴식을 위한루틴',
-        'icon': '🌙',
-        'color': '#2196F3',
-        'is_active': true,
-        'today_display': false, // 기본적으로 숨김
-        'total_completions': 12,
-        'success_rate': 90,
-        'steps': [
-          {
-            'id': 5,
-            'title': '독서',
-            'description': '교양 쌓기',
-            'order': 1,
-            'type': 'habit',
-            'difficulty': 'easy',
-            't_ref_sec': 1200,
-          },
-          {
-            'id': 6,
-            'title': '샤워하기',
-            'description': '깨끗이 씻기',
-            'order': 2,
-            'type': 'action',
-            'difficulty': 'easy',
-            't_ref_sec': 600,
-          },
-        ]
-      },
-      {
-        'id': 3,
-        'title': '점심루틴',
-        'description': '점심',
-        'icon': '🍽️',
-        'color': '#FF9800',
-        'is_active': true,
-        'today_display': true, // 기본적으로 표시
-        'total_completions': 5,
-        'success_rate': 80,
-        'steps': [
-          {
-            'id': 7,
-            'title': '점심먹기',
-            'description': '건강한 점심 식사',
-            'order': 1,
-            'type': 'action',
-            'difficulty': 'easy',
-            't_ref_sec': 900,
-          },
-        ]
-      },
-    ];
   }
 
   // 🎯 오늘 페이지 표시 토글

@@ -39,7 +39,25 @@ class RoutineCompletionState {
 // 🎯 루틴 완료 상태 Provider
 class RoutineCompletionNotifier extends StateNotifier<RoutineCompletionState> {
   RoutineCompletionNotifier() : super(const RoutineCompletionState()) {
-    _loadTodayCompletions();
+    _initializeCompletionState();
+  }
+
+  // 🚀 완료 상태 초기화 (앱 시작 시)
+  Future<void> _initializeCompletionState() async {
+    // 하루가 지났는지 확인
+    final isNewDay = await RoutineCompletionStorage.isNewDay();
+
+    if (isNewDay) {
+      print('🕛 새로운 하루가 시작되었습니다. 완료 상태를 초기화합니다.');
+      // 새로운 하루이면 완료 상태 초기화
+      await forceReset();
+      // 마지막 리셋 시간 업데이트
+      await RoutineCompletionStorage.setLastResetTime();
+    } else {
+      print('📅 같은 날입니다. 기존 완료 상태를 로드합니다.');
+      // 같은 날이면 기존 완료 상태 로드
+      await _loadTodayCompletions();
+    }
   }
 
   // 📱 오늘 완료된 루틴 목록 로드
@@ -49,6 +67,18 @@ class RoutineCompletionNotifier extends StateNotifier<RoutineCompletionState> {
     try {
       final completedRoutines =
           await RoutineCompletionStorage.getTodayCompletedRoutines();
+
+      // 디버깅: 저장된 완료 데이터 확인
+      print('🔍 SharedPreferences에서 로드된 완료 루틴: $completedRoutines');
+
+      // 잘못된 데이터가 있으면 초기화
+      if (completedRoutines.length > 10) {
+        // 비정상적으로 많은 완료 데이터
+        print('⚠️ 비정상적인 완료 데이터 감지, 초기화합니다.');
+        await RoutineCompletionStorage.clearTodayCompletions();
+        completedRoutines.clear();
+      }
+
       state = state.copyWith(
         completedRoutineIds: completedRoutines,
         isLoading: false,
@@ -96,6 +126,19 @@ class RoutineCompletionNotifier extends StateNotifier<RoutineCompletionState> {
     } catch (e) {
       state = state.copyWith(error: '완료 상태 초기화 실패: $e');
       print('완료 상태 초기화 오류: $e');
+    }
+  }
+
+  // 🚨 강제 초기화 (모든 완료 데이터 삭제)
+  Future<void> forceReset() async {
+    try {
+      await RoutineCompletionStorage.clearTodayCompletions();
+      state = state
+          .copyWith(completedRoutineIds: {}, isLoading: false, error: null);
+      print('🚨 강제 초기화 완료 - 모든 완료 데이터 삭제됨');
+    } catch (e) {
+      state = state.copyWith(error: '강제 초기화 실패: $e');
+      print('강제 초기화 오류: $e');
     }
   }
 

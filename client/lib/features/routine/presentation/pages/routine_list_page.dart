@@ -32,48 +32,6 @@ class DummyRoutine {
   });
 }
 
-class DummyRoutineList {
-  static final List<DummyRoutine> routines = [
-    const DummyRoutine(
-      id: '1',
-      title: '아침 루틴',
-      description: '하루를 시작하는 건강한 아침 습관',
-      totalSteps: 5,
-      completedSteps: 3,
-      icon: '🌅',
-      color: Color(0xFF6750A4),
-      isActive: true,
-    ),
-    const DummyRoutine(
-      id: '2',
-      title: '운동 루틴',
-      description: '매일 30분 운동으로 건강한 몸 만들기',
-      totalSteps: 4,
-      completedSteps: 1,
-      icon: '💪',
-      color: Color(0xFF4CAF50),
-    ),
-    const DummyRoutine(
-      id: '3',
-      title: '저녁 루틴',
-      description: '하루를 마무리하는 평화로운 저녁 시간',
-      totalSteps: 6,
-      completedSteps: 0,
-      icon: '🌙',
-      color: Color(0xFF2196F3),
-    ),
-    const DummyRoutine(
-      id: '4',
-      title: '독서 루틴',
-      description: '매일 1시간 독서로 지식 쌓기',
-      totalSteps: 3,
-      completedSteps: 2,
-      icon: '📚',
-      color: Color(0xFFFF9800),
-    ),
-  ];
-}
-
 class RoutineListPage extends ConsumerStatefulWidget {
   const RoutineListPage({super.key});
 

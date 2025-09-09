@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../../../../core/api/api_client.dart';
 import '../../../../shared/services/user_progress_service.dart';
+import '../../../today/data/providers/routine_completion_provider.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -19,6 +21,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 페이지가 다시 포커스될 때마다 데이터 새로고침
+    _refreshData();
+  }
+
   // RPG 데이터 (실제 데이터로 동기화됨)
   int _currentLevel = 1;
   int _currentExp = 0;
@@ -28,10 +37,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   int _todayExp = 270;
   int _streakDays = 7;
   int _completionRate = 85;
-  int _totalTimeSeconds = 0;
+  int _completedSteps = 0;
+  int _skippedSteps = 0;
+  int _skippedRoutines = 0;
 
   // 임시 캘린더 이벤트 데이터
   final Map<DateTime, List<Map<String, dynamic>>> _events = {};
+  // 오늘 날짜 기준 대기(미시작) 루틴 리스트
+  List<Map<String, dynamic>> _pendingRoutinesToday = [];
 
   @override
   void initState() {
@@ -44,6 +57,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   void _loadCalendarEvents() {
     // 실제 루틴 완료 기록을 불러와서 캘린더에 표시
     _loadRoutineHistory();
+  }
+
+  // 데이터 새로고침 (다른 페이지에서 루틴 완료 시 호출됨)
+  Future<void> _refreshData() async {
+    await _loadRoutineHistory();
+    await _loadUserStats();
   }
 
   Future<void> _loadRoutineHistory() async {
@@ -61,52 +80,70 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         events[dateKey] = List<Map<String, dynamic>>.from(routines);
       });
 
+      // 오늘 날짜의 대기 루틴(아직 시작하지 않은 루틴) 계산 (실제 API 목록 기반)
+      await _loadPendingRoutines(events);
+
       setState(() {
+        _events.clear(); // 기존 데이터 클리어하고 새로 로드
         _events.addAll(events);
       });
 
-      // 데이터가 없으면 더미 데이터로 대체
+      // 데이터가 없으면 빈 상태로 유지
       if (events.isEmpty) {
-        _loadDummyEvents();
+        print('히스토리 데이터가 없습니다.');
       }
     } catch (e) {
-      // 에러 시 더미 데이터로 대체
-      _loadDummyEvents();
+      print('히스토리 로드 오류: $e');
     }
   }
 
-  void _loadDummyEvents() {
-    // 임시 이벤트 데이터 생성 (실제 데이터가 없을 때)
-    final today = DateTime.now();
-    for (int i = 0; i < 30; i++) {
-      final date = today.subtract(Duration(days: i));
-      final dateKey = DateTime(date.year, date.month, date.day);
+  // 오늘 대기 중인 루틴들 로드
+  Future<void> _loadPendingRoutines(
+      Map<DateTime, List<Map<String, dynamic>>> events) async {
+    try {
+      final today = DateTime.now();
+      final todayKey = DateTime(today.year, today.month, today.day);
 
-      if (i % 3 == 0) {
-        // 3일마다 루틴 완료
-        _events[dateKey] = [
-          {
-            'routine': '생산적인 아침 루틴',
-            'exp': 150,
-            'completed_steps': 4,
-            'total_steps': 4,
-            'time_taken': '25분',
-          },
-        ];
+      // 오늘 완료된 루틴들 (히스토리 + 실시간 완료 상태)
+      final todayEvents = events[todayKey] ?? [];
+      final completedRoutineNames =
+          todayEvents.map((e) => e['routine'] as String).toSet();
+
+      // 실시간 완료 상태도 확인
+      final completionState = ref.read(routineCompletionProvider);
+
+      // 실제 API에서 전체 루틴 목록 취득
+      final apiRoutines = await ApiClient.getRoutines();
+      final pending = <Map<String, dynamic>>[];
+
+      for (final routine in apiRoutines) {
+        final routineTitle = routine['title'] ?? routine['name'] ?? '루틴';
+        final routineId = routine['id']?.toString() ?? '';
+        final isTodayDisplay = routine['today_display'] ?? false;
+
+        // 오늘 노출이 활성화된 루틴만 확인
+        if (!isTodayDisplay) continue;
+
+        // 완료되지 않은 루틴만 대기 목록에 추가 (히스토리 + 실시간 상태 둘 다 확인)
+        final isCompletedInHistory =
+            completedRoutineNames.contains(routineTitle);
+        final isCompletedRealtime =
+            completionState.isRoutineCompleted(routineId);
+
+        if (!isCompletedInHistory && !isCompletedRealtime) {
+          pending.add({
+            'routine': routineTitle,
+            'total_steps': (routine['steps'] as List?)?.length ?? 0,
+            'id': routine['id'],
+          });
+        }
       }
-      if (i % 4 == 0) {
-        // 4일마다 추가 루틴
-        _events[dateKey] = [
-          ...(_events[dateKey] ?? []),
-          {
-            'routine': '건강한 저녁 루틴',
-            'exp': 120,
-            'completed_steps': 3,
-            'total_steps': 3,
-            'time_taken': '18분',
-          },
-        ];
-      }
+
+      _pendingRoutinesToday = pending;
+      print('오늘 대기 중인 루틴: ${pending.length}개');
+    } catch (e) {
+      print('대기 루틴 로드 오류: $e');
+      _pendingRoutinesToday = [];
     }
   }
 
@@ -127,7 +164,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         _todayExp = todayStats['todayExp'] ?? 0;
         _streakDays = streakDays; // 실제 연속 일수
         _completionRate = todayStats['completionRate'] ?? 0;
-        _totalTimeSeconds = todayStats['totalTimeSeconds'] ?? 0;
+        _completedSteps = todayStats['completedSteps'] ?? 0;
+        _skippedSteps = todayStats['skippedSteps'] ?? 0;
+        _skippedRoutines = todayStats['skippedRoutines'] ?? 0;
       });
     } catch (e) {
       print('대시보드 사용자 통계 로드 오류: $e');
@@ -527,6 +566,58 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
             const SizedBox(height: 16),
 
+            // 아직 시작하지 않은 루틴 섹션
+            if (_pendingRoutinesToday.isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(Icons.pending_actions, color: Colors.deepPurple[700]),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '아직 시작하지 않은 루틴',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ..._pendingRoutinesToday.map((r) => Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: Colors.deepPurple.withOpacity(0.15)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.hourglass_bottom,
+                              color: Colors.deepPurple[700], size: 18),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            r['routine'] as String,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Text('총 ${r['total_steps']} 스텝',
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 12)),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 16),
+            ],
+
             // 일일 총계
             if (dayEvents.isNotEmpty)
               Container(
@@ -541,26 +632,56 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                child: Column(
                   children: [
-                    _buildDaySummaryItem(
-                      '완료 루틴',
-                      '${dayEvents.length}개',
-                      Icons.check_circle,
-                      Colors.green,
+                    // 첫 번째 행: 루틴 통계
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildDaySummaryItem(
+                          '완료 루틴',
+                          '${dayEvents.length}개',
+                          Icons.check_circle,
+                          Colors.green,
+                        ),
+                        _buildDaySummaryItem(
+                          '건너뛴 루틴',
+                          '$_skippedRoutines개',
+                          Icons.skip_next,
+                          Colors.orange,
+                        ),
+                        _buildDaySummaryItem(
+                          '총 획득 EXP',
+                          '+${dayEvents.fold(0, (sum, event) => sum + (event['exp'] as int))}',
+                          Icons.star,
+                          Colors.amber,
+                        ),
+                      ],
                     ),
-                    _buildDaySummaryItem(
-                      '총 획득 EXP',
-                      '+${dayEvents.fold(0, (sum, event) => sum + (event['exp'] as int))}',
-                      Icons.star,
-                      Colors.amber,
-                    ),
-                    _buildDaySummaryItem(
-                      '총 소요시간',
-                      _formatTime(_totalTimeSeconds),
-                      Icons.timer,
-                      Colors.blue,
+                    const SizedBox(height: 16),
+                    // 두 번째 행: 스텝 통계
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildDaySummaryItem(
+                          '완료 스텝',
+                          '$_completedSteps개',
+                          Icons.check,
+                          Colors.green,
+                        ),
+                        _buildDaySummaryItem(
+                          '건너뛴 스텝',
+                          '$_skippedSteps개',
+                          Icons.skip_next,
+                          Colors.orange,
+                        ),
+                        _buildDaySummaryItem(
+                          '완료율',
+                          '$_completionRate%',
+                          Icons.trending_up,
+                          Colors.blue,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -572,16 +693,23 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildRoutineResultCard(Map<String, dynamic> event) {
-    final completionRate =
-        (event['completed_steps'] as int) / (event['total_steps'] as int);
+    final completedSteps = event['completed_steps'] as int;
+    final totalSteps = event['total_steps'] as int;
+    final skippedSteps = event['skipped_steps'] as int? ?? 0;
+    final isSkipped = event['is_skipped'] as bool? ?? false;
+    final completionRate = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isSkipped ? Colors.orange.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(
+          color: isSkipped
+              ? Colors.orange.withOpacity(0.3)
+              : Colors.grey.withOpacity(0.2),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -598,10 +726,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: isSkipped
+                      ? Colors.orange.withOpacity(0.1)
+                      : Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.task_alt, color: Colors.blue[700], size: 20),
+                child: Icon(isSkipped ? Icons.skip_next : Icons.task_alt,
+                    color: isSkipped ? Colors.orange[700] : Colors.blue[700],
+                    size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -610,14 +742,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   children: [
                     Text(
                       event['routine'] as String,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: isSkipped ? Colors.orange[800] : Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${event['completed_steps']}/${event['total_steps']} 스텝 완료 • ${event['time_taken']} 소요',
+                      isSkipped
+                          ? '${totalSteps}개 스텝 모두 건너뛰기 • ${event['time_taken']} 소요'
+                          : skippedSteps > 0
+                              ? '${completedSteps}/${totalSteps} 스텝 완료 (${skippedSteps}개 건너뛰기) • ${event['time_taken']} 소요'
+                              : '${completedSteps}/${totalSteps} 스텝 완료 • ${event['time_taken']} 소요',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -626,30 +763,32 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '+${event['exp']} EXP',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber[800],
+              if (!isSkipped)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ),
+                  child: Text(
+                    '+${event['exp']} EXP',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber[800],
+                    ),
+                  ),
+                )
+              else
+                const SizedBox.shrink(),
             ],
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: completionRate,
             backgroundColor: Colors.grey.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              completionRate >= 1.0 ? Colors.green : Colors.orange,
-            ),
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
           ),
         ],
       ),

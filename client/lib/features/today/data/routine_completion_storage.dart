@@ -64,6 +64,47 @@ class RoutineCompletionStorage {
     return completedRoutines.contains(routineId);
   }
 
+  // 🕛 하루가 지났는지 확인 (자정 이후인지 체크)
+  static Future<bool> isNewDay() async {
+    final now = DateTime.now();
+    final lastReset = await _getLastResetTime();
+
+    // 마지막 리셋 시간이 없으면 오늘을 첫 날로 설정하고 false 반환
+    if (lastReset == null) {
+      // 첫 실행이므로 오늘을 리셋 시간으로 설정
+      await setLastResetTime();
+      return false; // 새로운 하루가 아님
+    }
+
+    final today = DateTime(now.year, now.month, now.day);
+    final lastResetDay =
+        DateTime(lastReset.year, lastReset.month, lastReset.day);
+
+    // 날짜가 다르면 새로운 하루
+    return today.isAfter(lastResetDay);
+  }
+
+  // 🕛 마지막 리셋 시간 가져오기
+  static Future<DateTime?> _getLastResetTime() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastResetString = prefs.getString('last_reset_time');
+      if (lastResetString != null) {
+        return DateTime.parse(lastResetString);
+      }
+    } catch (e) {
+      print('마지막 리셋 시간 가져오기 오류: $e');
+    }
+    return null; // 첫 실행으로 간주
+  }
+
+  // 🕛 마지막 리셋 시간 저장
+  static Future<void> setLastResetTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    await prefs.setString('last_reset_time', now.toIso8601String());
+  }
+
   // 🗓️ 오늘 날짜 문자열 생성 (YYYY-MM-DD 형식)
   static String _getTodayString() {
     final now = DateTime.now();

@@ -7,6 +7,7 @@ import '../../data/providers/routine_completion_provider.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
 import '../../../routine/data/providers/routine_list_provider.dart';
 import '../../../../shared/services/user_progress_service.dart';
+import '../../../routine/presentation/pages/routine_detail_page.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
@@ -388,8 +389,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     final steps = routine['steps'] as List<dynamic>? ?? [];
     final routineId = routine['id']?.toString() ?? '';
 
-    // 🎯 루틴 완료 상태 확인
-    final isCompleted = ref.watch(isRoutineCompletedProvider(routineId));
+    // 🎯 루틴 완료 상태 확인 (올바른 프로바이더 사용)
+    final completionState = ref.watch(routineCompletionProvider);
+    final isCompleted = completionState.isRoutineCompleted(routineId);
 
     // 🎨 색상 파싱 (안전하게 처리)
     Color color;
@@ -942,6 +944,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
       final routineId = progressState.currentRoutine?['id']?.toString();
       if (routineId != null) {
         _markRoutineAsCompleted(routineId);
+        // routineCompletionProvider에도 완료 상태 업데이트
+        ref
+            .read(routineCompletionProvider.notifier)
+            .markRoutineAsCompleted(routineId);
       }
 
       // 완료 위젯을 다이얼로그로 표시
@@ -1217,9 +1223,30 @@ class _TodayPageState extends ConsumerState<TodayPage> {
   // 🚀 특정 루틴 시작
   void _startSpecificRoutine(Map<String, dynamic> routine) {
     final steps = routine['steps'] as List<dynamic>? ?? [];
+    final routineId = routine['id']?.toString() ?? '';
+
+    // 🚫 이미 오늘 완료된 루틴인지 확인
+    final completionState = ref.read(routineCompletionProvider);
+    if (completionState.isRoutineCompleted(routineId)) {
+      CustomSnackbar.showInfo(context, '이미 오늘 완료한 루틴입니다.\n내일 다시 시도해보세요! 🌅');
+      return;
+    }
 
     if (steps.isEmpty) {
-      CustomSnackbar.showWarning(context, '이 루틴에는 스텝이 없습니다.\n먼저 스텝을 추가해주세요.');
+      // 스텝이 없는 루틴은 루틴 상세 페이지로 이동하여 스텝 추가 유도
+      CustomSnackbar.showWarning(
+          context, '이 루틴에는 스텝이 없습니다.\n스텝 추가 페이지로 이동합니다.');
+
+      // 루틴 상세 페이지로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RoutineDetailPage(
+            routineId: routine['id'] as int,
+            routineTitle: routine['title'] as String,
+          ),
+        ),
+      );
       return;
     }
 

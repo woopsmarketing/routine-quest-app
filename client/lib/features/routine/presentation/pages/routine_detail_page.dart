@@ -64,7 +64,7 @@ class _RoutineDetailPageState extends State<RoutineDetailPage> {
   // 자동 시작 설정 불러오기
   Future<void> _loadAutoStartSettings() async {
     try {
-      // TODO: 실제 API에서 자동 시작 설정 불러오기
+      // 실제 API에서 자동 시작 설정 불러오기 (구현 예정)
       // final autoStartData = await ApiClient.getRoutineAutoStart(widget.routineId);
 
       // 임시로 SharedPreferences를 사용해서 로컬 저장소에서 불러오기

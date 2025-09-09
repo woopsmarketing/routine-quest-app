@@ -92,22 +92,14 @@ class RoutineResponse(BaseModel):
         from_attributes = True
 
 
-# 🔍 더미 사용자 (실제 인증 구현 전까지)
+# 🔍 현재 사용자 가져오기 (실제 인증 구현 필요)
 def get_current_user(db: Session = Depends(get_db)) -> User:
-    """현재 사용자 가져오기 (더미)"""
-    # 실제로는 JWT 토큰에서 사용자 정보를 가져와야 함
+    """현재 사용자 가져오기"""
+    # TODO: 실제 JWT 토큰에서 사용자 정보를 가져와야 함
+    # 임시로 첫 번째 사용자를 반환 (실제 구현에서는 인증 토큰에서 사용자 ID 추출)
     user = db.query(User).first()
     if not user:
-        # 더미 사용자 생성
-        user = User(
-            email="demo@routinequest.com",
-            username="demo_user",
-            full_name="데모 사용자",
-            is_active=True,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        raise HTTPException(status_code=401, detail="인증이 필요합니다")
     return user
 
 
