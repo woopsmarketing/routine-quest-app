@@ -609,13 +609,14 @@ class _RoutineDetailPageState extends State<RoutineDetailPage> {
 
   // 스텝 카드
   Widget _buildStepCard(Map<String, dynamic> step, int order) {
-    final stepType = step['type']?.toString() ?? 'action';
+    final stepType = step['step_type']?.toString() ?? 'action';
     final difficulty = step['difficulty']?.toString() ?? 'easy';
     final timeInSeconds = step['t_ref_sec'] as int? ?? 120;
     final timeInMinutes = (timeInSeconds / 60).round();
 
     return Card(
       child: ListTile(
+        onTap: () => _showEditStepDialog(step), // 스텝 클릭 시 수정 다이얼로그 열기
         leading: CircleAvatar(
           backgroundColor: _getStepTypeColor(stepType).withOpacity(0.1),
           child: Text(
@@ -700,12 +701,26 @@ class _RoutineDetailPageState extends State<RoutineDetailPage> {
     switch (type.toLowerCase()) {
       case 'action':
         return Colors.green;
-      case 'timer':
-        return Colors.orange;
-      case 'check':
-        return Colors.blue;
       case 'habit':
         return Colors.purple;
+      case 'exercise':
+        return Colors.orange;
+      case 'mindfulness':
+        return Colors.blue;
+      case 'learning':
+        return Colors.indigo;
+      case 'hygiene':
+        return Colors.teal;
+      case 'nutrition':
+        return Colors.brown;
+      case 'social':
+        return Colors.pink;
+      case 'productivity':
+        return Colors.deepOrange;
+      case 'creativity':
+        return Colors.deepPurple;
+      case 'relaxation':
+        return Colors.lightBlue;
       default:
         return Colors.grey;
     }
@@ -716,12 +731,26 @@ class _RoutineDetailPageState extends State<RoutineDetailPage> {
     switch (type.toLowerCase()) {
       case 'action':
         return '액션';
-      case 'timer':
-        return '타이머';
-      case 'check':
-        return '체크';
       case 'habit':
         return '습관';
+      case 'exercise':
+        return '운동';
+      case 'mindfulness':
+        return '명상';
+      case 'learning':
+        return '학습';
+      case 'hygiene':
+        return '위생';
+      case 'nutrition':
+        return '영양';
+      case 'social':
+        return '소셜';
+      case 'productivity':
+        return '생산성';
+      case 'creativity':
+        return '창의성';
+      case 'relaxation':
+        return '휴식';
       default:
         return '기타';
     }
@@ -949,6 +978,7 @@ class _RoutineDetailPageState extends State<RoutineDetailPage> {
       context: context,
       builder: (context) => EditStepDialog(
         step: step,
+        routineId: widget.routineId,
         onStepUpdated: () {
           _loadRoutineDetail(); // 새로고침
         },
@@ -1027,18 +1057,49 @@ class _AddStepDialogState extends State<AddStepDialog> {
   bool _isLoading = false;
 
   final List<Map<String, String>> _stepTypes = [
+    {'value': 'habit', 'label': '습관', 'description': '일상 습관 (양치질, 세수 등)'},
+    {
+      'value': 'exercise',
+      'label': '운동',
+      'description': '신체 활동 (달리기, 헬스, 요가 등)'
+    },
+    {
+      'value': 'mindfulness',
+      'label': '명상',
+      'description': '마음챙김 활동 (명상, 호흡법 등)'
+    },
     {
       'value': 'action',
-      'label': '액션',
-      'description': '일반적인 행동 (물 마시기, 운동하기 등)'
+      'label': '행동',
+      'description': '일반적인 행동 (물 마시기, 정리하기 등)'
+    },
+    {'value': 'learning', 'label': '학습', 'description': '지식 습득 (독서, 강의 듣기 등)'},
+    {'value': 'hygiene', 'label': '위생', 'description': '위생 관리 (샤워, 손씻기 등)'},
+    {
+      'value': 'nutrition',
+      'label': '영양',
+      'description': '식사 및 영양 관리 (아침식사, 간식 등)'
     },
     {
-      'value': 'timer',
-      'label': '타이머',
-      'description': '시간 기반 활동 (명상 5분, 독서 30분 등)'
+      'value': 'social',
+      'label': '소셜',
+      'description': '사회적 활동 (친구 만나기, 전화하기 등)'
     },
-    {'value': 'check', 'label': '체크', 'description': '확인 작업 (일기 썼는지, 정리했는지 등)'},
-    {'value': 'habit', 'label': '습관', 'description': '일상 습관 (양치질, 세수 등)'},
+    {
+      'value': 'productivity',
+      'label': '생산성',
+      'description': '업무 및 생산성 활동 (작업, 정리 등)'
+    },
+    {
+      'value': 'creativity',
+      'label': '창의성',
+      'description': '창작 활동 (그림 그리기, 글쓰기 등)'
+    },
+    {
+      'value': 'relaxation',
+      'label': '휴식',
+      'description': '휴식 및 휴양 활동 (낮잠, 산책 등)'
+    },
   ];
 
   final List<Map<String, String>> _difficulties = [
@@ -1101,23 +1162,30 @@ class _AddStepDialogState extends State<AddStepDialog> {
               const SizedBox(height: 16),
 
               // 스텝 타입 선택
-              DropdownButtonFormField<String>(
-                value: _selectedType,
-                decoration: const InputDecoration(
-                  labelText: '스텝 타입',
-                  border: OutlineInputBorder(),
-                ),
-                items: _stepTypes.map((type) {
-                  return DropdownMenuItem(
-                    value: type['value'],
-                    child: Text(type['label']!),
+              const Text(
+                '스텝 타입',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _stepTypes.map((type) {
+                  final isSelected = _selectedType == type['value'];
+                  return FilterChip(
+                    label: Text(type['label']!),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedType = type['value']!;
+                        });
+                      }
+                    },
+                    selectedColor: Colors.blue.withOpacity(0.2),
+                    checkmarkColor: Colors.blue[700],
                   );
                 }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedType = value!;
-                  });
-                },
               ),
               const SizedBox(height: 8),
               // 선택된 타입 설명
@@ -1280,7 +1348,7 @@ class _AddStepDialogState extends State<AddStepDialog> {
       final stepData = {
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'type': _selectedType,
+        'step_type': _selectedType,
         'difficulty': _selectedDifficulty,
         't_ref_sec': _estimatedMinutes * 60,
         'is_optional': _isOptional,
@@ -1319,28 +1387,281 @@ class _AddStepDialogState extends State<AddStepDialog> {
   }
 }
 
-// 스텝 수정 다이얼로그 (간단 버전)
-class EditStepDialog extends StatelessWidget {
+// 스텝 수정 다이얼로그 (완전 구현)
+class EditStepDialog extends StatefulWidget {
   final Map<String, dynamic> step;
+  final int routineId;
   final VoidCallback onStepUpdated;
 
   const EditStepDialog({
     super.key,
     required this.step,
+    required this.routineId,
     required this.onStepUpdated,
   });
+
+  @override
+  State<EditStepDialog> createState() => _EditStepDialogState();
+}
+
+class _EditStepDialogState extends State<EditStepDialog> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _minutesController;
+  late int _estimatedMinutes;
+  late String _stepType;
+  late bool _isOptional;
+  bool _isLoading = false;
+
+  // 스텝 타입 옵션
+  final List<Map<String, dynamic>> _stepTypes = [
+    {'value': 'habit', 'label': '습관', 'icon': Icons.repeat},
+    {'value': 'exercise', 'label': '운동', 'icon': Icons.fitness_center},
+    {'value': 'mindfulness', 'label': '명상', 'icon': Icons.self_improvement},
+    {'value': 'action', 'label': '행동', 'icon': Icons.check_circle},
+    {'value': 'learning', 'label': '학습', 'icon': Icons.school},
+    {'value': 'hygiene', 'label': '위생', 'icon': Icons.clean_hands},
+    {'value': 'nutrition', 'label': '영양', 'icon': Icons.restaurant},
+    {'value': 'social', 'label': '소셜', 'icon': Icons.people},
+    {'value': 'productivity', 'label': '생산성', 'icon': Icons.work},
+    {'value': 'creativity', 'label': '창의성', 'icon': Icons.palette},
+    {'value': 'relaxation', 'label': '휴식', 'icon': Icons.spa},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.step['title'] ?? '');
+    _descriptionController =
+        TextEditingController(text: widget.step['description'] ?? '');
+    _estimatedMinutes = (widget.step['t_ref_sec'] ?? 120) ~/ 60; // 초를 분으로 변환
+    _minutesController =
+        TextEditingController(text: _estimatedMinutes.toString());
+    _stepType = widget.step['step_type'] ?? 'habit';
+    _isOptional = widget.step['is_optional'] ?? false;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _minutesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('스텝 수정'),
-      content: const Text('스텝 수정 기능은 준비 중입니다.'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 스텝 제목
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: '스텝 제목',
+                  hintText: '예: 물 한 잔 마시기',
+                  border: OutlineInputBorder(),
+                ),
+                maxLength: 50,
+              ),
+              const SizedBox(height: 16),
+
+              // 스텝 설명
+              TextField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: '스텝 설명 (선택사항)',
+                  hintText: '스텝에 대한 자세한 설명을 입력하세요',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                maxLength: 200,
+              ),
+              const SizedBox(height: 16),
+
+              // 예상 소요 시간
+              const Text(
+                '예상 소요 시간',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Slider(
+                      value: _estimatedMinutes.toDouble(),
+                      min: 1,
+                      max: 60,
+                      divisions: 59,
+                      label: '${_estimatedMinutes}분',
+                      onChanged: (value) {
+                        setState(() {
+                          _estimatedMinutes = value.round();
+                          _minutesController.text =
+                              _estimatedMinutes.toString();
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 80,
+                    child: TextField(
+                      controller: _minutesController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: '분',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onChanged: (value) {
+                        final minutes = int.tryParse(value);
+                        if (minutes != null && minutes >= 1 && minutes <= 60) {
+                          setState(() {
+                            _estimatedMinutes = minutes;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '슬라이더로 조정하거나 직접 숫자를 입력하세요 (1-60분)',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+
+              // 스텝 타입 선택
+              const Text(
+                '스텝 타입',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _stepTypes.map((type) {
+                  final isSelected = _stepType == type['value'];
+                  return FilterChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(type['icon'], size: 16),
+                        const SizedBox(width: 4),
+                        Text(type['label']),
+                      ],
+                    ),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _stepType = type['value'];
+                        });
+                      }
+                    },
+                    selectedColor: Colors.blue.withOpacity(0.2),
+                    checkmarkColor: Colors.blue[700],
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // 선택적 스텝 여부
+              SwitchListTile(
+                title: const Text('선택적 스텝'),
+                subtitle: const Text('건너뛸 수 있는 스텝으로 설정'),
+                value: _isOptional,
+                onChanged: (value) {
+                  setState(() {
+                    _isOptional = value;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('닫기'),
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _saveStep,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('저장'),
         ),
       ],
     );
+  }
+
+  // 스텝 저장
+  Future<void> _saveStep() async {
+    if (_titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('스텝 제목을 입력해주세요')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final stepData = {
+        'title': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        't_ref_sec': _estimatedMinutes * 60, // 분을 초로 변환
+        'step_type': _stepType,
+        'is_optional': _isOptional,
+      };
+
+      await ApiClient.updateStep(
+        widget.routineId,
+        widget.step['id'],
+        stepData,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        widget.onStepUpdated();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('스텝이 성공적으로 수정되었습니다! 🎉'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('스텝 수정에 실패했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

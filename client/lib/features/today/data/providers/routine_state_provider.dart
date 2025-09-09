@@ -2,6 +2,7 @@
 // 페이지 간 이동 시에도 루틴 진행 상태를 유지하는 프로바이더
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/services/user_progress_service.dart';
+import '../../../../core/services/background_timer_service.dart';
 
 // 스텝 수행 결과 모델
 class StepResult {
@@ -56,6 +57,11 @@ class RoutineProgressState {
   final List<StepResult> stepResults; // 각 스텝 수행 결과
   final int expGained; // 획득한 경험치
 
+  // 타이머 관련 상태 추가
+  final int currentStepElapsedSeconds; // 현재 스텝의 경과 시간
+  final DateTime? currentStepStartedAt; // 현재 스텝 시작 시각
+  final bool isTimerRunning; // 타이머 실행 상태
+
   const RoutineProgressState({
     this.currentRoutine,
     this.currentSteps = const [],
@@ -65,6 +71,9 @@ class RoutineProgressState {
     this.routineCompletedAt,
     this.stepResults = const [],
     this.expGained = 0,
+    this.currentStepElapsedSeconds = 0,
+    this.currentStepStartedAt,
+    this.isTimerRunning = false,
   });
 
   // 상태 복사 메서드
@@ -77,6 +86,9 @@ class RoutineProgressState {
     DateTime? routineCompletedAt,
     List<StepResult>? stepResults,
     int? expGained,
+    int? currentStepElapsedSeconds,
+    DateTime? currentStepStartedAt,
+    bool? isTimerRunning,
   }) {
     return RoutineProgressState(
       currentRoutine: currentRoutine ?? this.currentRoutine,
@@ -87,6 +99,10 @@ class RoutineProgressState {
       routineCompletedAt: routineCompletedAt ?? this.routineCompletedAt,
       stepResults: stepResults ?? this.stepResults,
       expGained: expGained ?? this.expGained,
+      currentStepElapsedSeconds:
+          currentStepElapsedSeconds ?? this.currentStepElapsedSeconds,
+      currentStepStartedAt: currentStepStartedAt ?? this.currentStepStartedAt,
+      isTimerRunning: isTimerRunning ?? this.isTimerRunning,
     );
   }
 
@@ -162,6 +178,52 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
       currentStepIndex: 0,
       routineStartedAt: DateTime.now(),
       stepResults: [], // 결과 초기화
+      currentStepElapsedSeconds: 0,
+      currentStepStartedAt: DateTime.now(),
+      isTimerRunning: true,
+    );
+
+    // 백그라운드 타이머 시작
+    _startBackgroundTimer();
+  }
+
+  // 현재 스텝 타이머 시작
+  void startCurrentStepTimer() {
+    if (!state.isRoutineStarted || state.isCompleted) return;
+
+    state = state.copyWith(
+      currentStepStartedAt: DateTime.now(),
+      currentStepElapsedSeconds: 0,
+      isTimerRunning: true,
+    );
+  }
+
+  // 현재 스텝 타이머 업데이트 (1초마다 호출)
+  void updateCurrentStepTimer() {
+    if (!state.isTimerRunning || state.currentStepStartedAt == null) return;
+
+    final now = DateTime.now();
+    final elapsed = now.difference(state.currentStepStartedAt!).inSeconds;
+
+    state = state.copyWith(
+      currentStepElapsedSeconds: elapsed,
+    );
+  }
+
+  // 현재 스텝 타이머 정지
+  void pauseCurrentStepTimer() {
+    state = state.copyWith(
+      isTimerRunning: false,
+    );
+  }
+
+  // 현재 스텝 타이머 재시작
+  void resumeCurrentStepTimer() {
+    if (!state.isRoutineStarted || state.isCompleted) return;
+
+    state = state.copyWith(
+      currentStepStartedAt: DateTime.now(),
+      isTimerRunning: true,
     );
   }
 
@@ -197,6 +259,10 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
         expGained: state.expGained + totalXP,
         // 모든 스텝 완료 시 루틴 완료 시각 기록
         routineCompletedAt: isCompleted ? DateTime.now() : null,
+        // 타이머 리셋 (다음 스텝을 위해)
+        currentStepElapsedSeconds: 0,
+        currentStepStartedAt: isCompleted ? null : DateTime.now(),
+        isTimerRunning: !isCompleted,
       );
 
       // 루틴 완료 시 경험치 및 기록 저장
@@ -227,13 +293,17 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
 
       final newResults = [...state.stepResults, stepResult];
       final newIndex = state.currentStepIndex + 1;
+      final isCompleted = newIndex >= state.currentSteps.length;
 
       state = state.copyWith(
         currentStepIndex: newIndex,
         stepResults: newResults,
         // 모든 스텝 완료 시 루틴 완료 시각 기록
-        routineCompletedAt:
-            newIndex >= state.currentSteps.length ? DateTime.now() : null,
+        routineCompletedAt: isCompleted ? DateTime.now() : null,
+        // 타이머 리셋 (다음 스텝을 위해)
+        currentStepElapsedSeconds: 0,
+        currentStepStartedAt: isCompleted ? null : DateTime.now(),
+        isTimerRunning: !isCompleted,
       );
     }
   }
@@ -246,12 +316,58 @@ class RoutineProgressNotifier extends StateNotifier<RoutineProgressState> {
       routineStartedAt: null,
       routineCompletedAt: null,
       stepResults: [],
+      currentStepElapsedSeconds: 0,
+      currentStepStartedAt: null,
+      isTimerRunning: false,
     );
   }
 
   // 루틴 클리어 (완전 초기화)
   void clearRoutine() {
     state = const RoutineProgressState();
+    BackgroundTimerService().dispose();
+  }
+
+  // 백그라운드 타이머 시작
+  void _startBackgroundTimer() {
+    if (state.currentRoutine == null || state.currentStep == null) return;
+
+    final routineId = state.currentRoutine!['id'] ?? 'unknown';
+    final stepIndex = state.currentStepIndex;
+    final targetSeconds = (state.currentStep!['t_ref_sec'] ?? 120) as int;
+    final stepTitle = state.currentStep!['title'] ?? '스텝';
+
+    BackgroundTimerService().startTimer(
+      routineId: routineId,
+      stepIndex: stepIndex,
+      targetSeconds: targetSeconds,
+      stepTitle: stepTitle,
+    );
+  }
+
+  // 백그라운드 타이머 상태 동기화
+  void syncBackgroundTimer() {
+    final backgroundTimer = BackgroundTimerService();
+
+    if (backgroundTimer.isRunning) {
+      // 백그라운드 타이머가 실행 중이면 상태 동기화
+      state = state.copyWith(
+        currentStepElapsedSeconds: backgroundTimer.currentElapsedSeconds,
+        isTimerRunning: true,
+      );
+    }
+  }
+
+  // 백그라운드에서 경과한 시간 추가
+  void addBackgroundTime(int backgroundSeconds) {
+    if (!state.isRoutineStarted || state.isCompleted) return;
+
+    final newElapsedSeconds =
+        state.currentStepElapsedSeconds + backgroundSeconds;
+
+    state = state.copyWith(
+      currentStepElapsedSeconds: newElapsedSeconds,
+    );
   }
 
   // 루틴 완료 시 경험치 및 기록 저장

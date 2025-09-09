@@ -16,8 +16,6 @@ class TodayPage extends ConsumerStatefulWidget {
 }
 
 class _TodayPageState extends ConsumerState<TodayPage> {
-  int _currentElapsedSeconds = 0; // 현재 스텝의 경과 시간 저장
-
   // 사용자 통계 데이터
   int _todayExp = 0;
   int _streakDays = 0;
@@ -30,6 +28,8 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     _loadUserStats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(routineListProvider.notifier).loadRoutines();
+      // 백그라운드 타이머 상태 동기화
+      ref.read(routineProgressProvider.notifier).syncBackgroundTimer();
     });
   }
 
@@ -296,7 +296,15 @@ class _TodayPageState extends ConsumerState<TodayPage> {
 
     // 🎯 진행 중인 루틴이 있으면 전체 화면 스텝 진행 화면 표시
     if (isRoutineInProgress) {
-      return _buildFullScreenStepProgress(progressState);
+      return Column(
+        children: [
+          // 루틴 진행 중 배너
+          _buildRoutineInProgressBanner(progressState),
+          Expanded(
+            child: _buildFullScreenStepProgress(progressState),
+          ),
+        ],
+      );
     }
 
     return Padding(
@@ -697,10 +705,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
             (targetSeconds - elapsedSeconds).clamp(0, targetSeconds);
         final progress = elapsedSeconds / targetSeconds;
 
-        // 현재 경과 시간을 상태에 저장 (정확한 시간 계산을 위해)
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _currentElapsedSeconds = elapsedSeconds;
-        });
+        // 전역 상태에서 현재 스텝의 경과 시간 가져오기
+        // final progressState = ref.read(routineProgressProvider);
+        // final currentElapsedSeconds = progressState.currentStepElapsedSeconds;
 
         // 시간 초과 시 자동으로 다음 스텝으로
         if (remainingSeconds == 0 && elapsedSeconds > 0) {
@@ -768,13 +775,34 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     );
   }
 
-  // 🕐 타이머 스트림 (1초마다 업데이트)
+  // 🕐 타이머 스트림 (전역 상태 기반)
   Stream<int> _timerStream(int targetSeconds) async* {
-    int elapsedSeconds = 0;
-    while (elapsedSeconds <= targetSeconds) {
+    final progressState = ref.read(routineProgressProvider);
+
+    // 루틴이 시작되지 않았거나 완료된 경우
+    if (!progressState.isRoutineStarted || progressState.isCompleted) {
+      yield 0;
+      return;
+    }
+
+    // 현재 스텝의 경과 시간을 전역 상태에서 가져오기
+    int elapsedSeconds = progressState.currentStepElapsedSeconds;
+
+    while (elapsedSeconds <= targetSeconds && progressState.isTimerRunning) {
       yield elapsedSeconds;
       await Future.delayed(const Duration(seconds: 1));
-      elapsedSeconds++;
+
+      // 전역 상태 업데이트
+      ref.read(routineProgressProvider.notifier).updateCurrentStepTimer();
+
+      // 업데이트된 상태 다시 읽기
+      final updatedState = ref.read(routineProgressProvider);
+      elapsedSeconds = updatedState.currentStepElapsedSeconds;
+
+      // 타이머가 정지되었거나 루틴이 완료된 경우 중단
+      if (!updatedState.isTimerRunning || updatedState.isCompleted) {
+        break;
+      }
     }
   }
 
@@ -791,15 +819,12 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     final currentStep = progressState.currentStep;
     if (currentStep == null) return;
 
-    final targetSeconds = (currentStep['t_ref_sec'] as int? ?? 120);
-    final elapsedSeconds = _getCurrentElapsedSeconds(targetSeconds);
+    // 전역 상태에서 현재 스텝의 경과 시간 가져오기
+    final elapsedSeconds = progressState.currentStepElapsedSeconds;
 
     ref
         .read(routineProgressProvider.notifier)
         .completeCurrentStep(elapsedSeconds);
-
-    // 타이머 리셋 (다음 스텝을 위해)
-    _currentElapsedSeconds = 0;
 
     // 중간 팝업 표시
     _showStepCompletionPopup(
@@ -814,13 +839,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     final currentStep = progressState.currentStep;
     if (currentStep == null) return;
 
-    final targetSeconds = (currentStep['t_ref_sec'] as int? ?? 120);
-    final elapsedSeconds = _getCurrentElapsedSeconds(targetSeconds);
+    // 전역 상태에서 현재 스텝의 경과 시간 가져오기
+    final elapsedSeconds = progressState.currentStepElapsedSeconds;
 
     ref.read(routineProgressProvider.notifier).skipCurrentStep(elapsedSeconds);
-
-    // 타이머 리셋 (다음 스텝을 위해)
-    _currentElapsedSeconds = 0;
 
     // 중간 팝업 표시
     _showStepCompletionPopup(
@@ -829,10 +851,10 @@ class _TodayPageState extends ConsumerState<TodayPage> {
     _checkRoutineCompletion();
   }
 
-  // 🕐 현재 경과 시간 계산 (타이머 스트림에서 가져오기)
+  // 🕐 현재 경과 시간 계산 (전역 상태에서 가져오기)
   int _getCurrentElapsedSeconds(int targetSeconds) {
-    // 타이머에서 저장된 현재 경과 시간 사용
-    return _currentElapsedSeconds.clamp(0, targetSeconds);
+    final progressState = ref.read(routineProgressProvider);
+    return progressState.currentStepElapsedSeconds.clamp(0, targetSeconds);
   }
 
   // 🎉 스텝 완료/건너뛰기 안내 메시지 오버레이 표시
@@ -1206,15 +1228,100 @@ class _TodayPageState extends ConsumerState<TodayPage> {
       ref.read(routineProgressProvider.notifier).setRoutine(routine, steps);
       ref.read(routineProgressProvider.notifier).startRoutine();
 
-      // 타이머 초기화
-      _currentElapsedSeconds = 0;
-
       // ✅ 성공 메시지 표시
       CustomSnackbar.showSuccess(context, '${routine['title']} 시작! 🚀');
     } catch (e) {
       print('루틴 시작 오류: $e');
       CustomSnackbar.showError(context, '루틴 시작에 실패했습니다');
     }
+  }
+
+  // 🚨 루틴 진행 중 배너
+  Widget _buildRoutineInProgressBanner(RoutineProgressState progressState) {
+    final currentStep = progressState.currentStep;
+    final routineName = progressState.currentRoutine?['title'] ?? '루틴';
+    final stepTitle = currentStep?['title'] ?? '스텝';
+    final currentStepIndex = progressState.currentStepIndex;
+    final totalSteps = progressState.currentSteps.length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade400, Colors.red.shade400],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // 애니메이션 아이콘
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(seconds: 2),
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: 0.8 + (0.2 * value),
+                child: const Icon(
+                  Icons.timer,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 12),
+          // 진행 정보
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '🚀 $routineName 진행 중',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '현재: $stepTitle ($currentStepIndex/$totalSteps)',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 진행률 표시
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${(progressState.progress * 100).round()}%',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

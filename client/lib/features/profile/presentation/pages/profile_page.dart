@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'profile_edit_page.dart';
 import 'goal_setting_page.dart';
 import 'notification_settings_page.dart';
+import 'app_info_page.dart';
+import 'help_page.dart';
 import '../../services/profile_service.dart';
 import '../../services/user_stats_service.dart';
 import '../../services/dashboard_data_service.dart';
@@ -501,8 +503,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   title: '앱 정보',
                   subtitle: '버전 1.0.0',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('앱 정보 화면 준비 중')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AppInfoPage(),
+                      ),
                     );
                   },
                 ),
@@ -511,8 +515,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   icon: Icons.help,
                   title: '도움말',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('도움말 화면 준비 중')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const HelpPage(),
+                      ),
                     );
                   },
                 ),

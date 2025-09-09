@@ -375,16 +375,6 @@ class _RoutineListPageState extends ConsumerState<RoutineListPage> {
               ),
             ),
             const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit),
-                  SizedBox(width: 8),
-                  Text('수정'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
@@ -413,81 +403,6 @@ class _RoutineListPageState extends ConsumerState<RoutineListPage> {
           if (result == true) {
             ref.read(routineListProvider.notifier).loadRoutines();
           }
-        },
-      ),
-    );
-  }
-
-  Widget _buildRoutineCard(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required int steps,
-    required int completed,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(description),
-            const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: steps > 0 ? completed / steps : 0,
-              backgroundColor: Colors.grey.withOpacity(0.3),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-            const SizedBox(height: 4),
-            Text('$completed/$steps 완료'),
-          ],
-        ),
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit),
-                  SizedBox(width: 8),
-                  Text('수정'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('삭제', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-          onSelected: (value) {
-            if (value == 'edit') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('루틴 수정 기능 준비 중')),
-              );
-            } else if (value == 'delete') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('루틴 삭제 기능 준비 중')),
-              );
-            }
-          },
-        ),
-        onTap: () {
-          // 루틴 상세 화면으로 이동
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$title 상세 화면 준비 중')),
-          );
         },
       ),
     );
@@ -560,12 +475,6 @@ class _RoutineListPageState extends ConsumerState<RoutineListPage> {
             ),
           );
         }
-        break;
-
-      case 'edit':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('루틴 수정 기능 준비 중')),
-        );
         break;
 
       case 'delete':
